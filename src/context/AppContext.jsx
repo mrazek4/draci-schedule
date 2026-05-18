@@ -5,7 +5,7 @@ import { defaultState } from '../data/defaults.js'
 const AppContext = createContext(null)
 
 export function AppProvider({ children }) {
-  const [state, setState] = useLocalStorage('draci-schedule-v5', defaultState)
+  const [state, setState] = useLocalStorage('draci-schedule-v6', defaultState)
 
   const update = useCallback((patch) => setState((s) => ({ ...s, ...patch })), [setState])
 
@@ -25,7 +25,7 @@ export function AppProvider({ children }) {
   const addTraining = useCallback((training) => {
     setState((s) => ({
       ...s,
-      trainings: [...s.trainings, { ...training, id: crypto.randomUUID(), note: '' }],
+      trainings: [...s.trainings, { id: crypto.randomUUID(), note: '', ...training }],
     }))
   }, [setState])
 

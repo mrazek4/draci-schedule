@@ -12,7 +12,7 @@ npm run preview  # preview production build
 
 ## Architecture
 
-Single-page React 18 + Vite app. No router. State persists to `localStorage` under key `draci-schedule-v1`.
+Single-page React 18 + Vite app. No router. State persists to `localStorage` under key `draci-schedule-v6`.
 
 ### State (`src/context/AppContext.jsx`)
 Central context wraps all data and CRUD actions. `useLocalStorage` hook auto-syncs to localStorage. Components call `useApp()` to access state and actions. Never write to localStorage directly.
