@@ -1,0 +1,271 @@
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 16px;
+}
+
+.modal {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  width: 100%;
+  max-width: 460px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.7);
+}
+
+.modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.modal__title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.modal__close {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  font-size: 18px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.modal__close:hover {
+  background: var(--color-surface-2);
+  color: var(--color-text);
+}
+
+.modal__field {
+  margin-bottom: 14px;
+}
+
+.modal__label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--color-text-muted);
+  margin-bottom: 5px;
+}
+
+.modal__input,
+.modal__select,
+.modal__textarea {
+  width: 100%;
+  padding: 8px 10px;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.modal__input:focus,
+.modal__select:focus,
+.modal__textarea:focus {
+  border-color: var(--color-accent);
+}
+
+.modal__select option {
+  background: var(--color-surface-2);
+}
+
+.modal__textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+.modal__row {
+  display: flex;
+  gap: 10px;
+}
+
+.modal__row .modal__field {
+  flex: 1;
+}
+
+.modal__actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+}
+
+.modal__actions--spread {
+  justify-content: space-between;
+}
+
+.btn {
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  transition: background 0.15s, color 0.15s;
+}
+
+.btn--primary {
+  background: var(--color-accent);
+  color: #fff;
+}
+
+.btn--primary:hover {
+  background: var(--color-accent-hover);
+}
+
+.btn--ghost {
+  background: var(--color-surface-2);
+  color: var(--color-text-muted);
+}
+
+.btn--ghost:hover {
+  background: var(--color-border);
+  color: var(--color-text);
+}
+
+.btn--danger {
+  background: transparent;
+  color: var(--color-danger);
+  border: 1px solid var(--color-danger);
+}
+
+.btn--danger:hover {
+  background: var(--color-danger);
+  color: #fff;
+}
+
+/* ── availability rows in HallModal ── */
+.avail-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.avail-row__day {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  width: 28px;
+}
+
+.avail-row__inputs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+}
+
+.avail-row__inputs input {
+  width: 80px;
+  padding: 5px 8px;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-size: 12px;
+  outline: none;
+}
+
+.avail-row__inputs input:focus {
+  border-color: var(--color-accent);
+}
+
+.avail-row__remove {
+  color: var(--color-text-muted);
+  font-size: 16px;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  transition: color 0.15s, background 0.15s;
+}
+
+.avail-row__remove:hover {
+  color: var(--color-danger);
+  background: var(--color-surface-2);
+}
+
+/* ── team list in TeamModal ── */
+.manage-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.manage-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: var(--color-surface-2);
+  border-radius: var(--radius-sm);
+}
+
+.manage-item__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.manage-item__name {
+  flex: 1;
+  font-size: 13px;
+}
+
+.manage-item__btn {
+  font-size: 12px;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  transition: background 0.15s, color 0.15s;
+}
+
+.manage-item__btn:hover {
+  background: var(--color-border);
+  color: var(--color-text);
+}
+
+.manage-item__btn--danger:hover {
+  background: var(--color-danger);
+  color: #fff;
+}
+
+.modal__divider {
+  height: 1px;
+  background: var(--color-border);
+  margin: 16px 0;
+}
+
+.color-preview {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  flex-shrink: 0;
+  align-self: flex-end;
+  margin-bottom: 14px;
+}
