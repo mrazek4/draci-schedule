@@ -1,6 +1,6 @@
 import { useApp } from '../../context/AppContext.jsx'
 import TeamList from './TeamList.jsx'
-import logo from '../../assets/logo.png'
+import logo from '../../assets/1629729771_club_logo.webp'
 import './Sidebar.css'
 
 export default function Sidebar({ onManageTeams, onManageHalls, onAddTraining }) {
