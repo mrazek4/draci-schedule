@@ -6,21 +6,21 @@ import './Modal.css'
 
 const DAY_NAMES = ['Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek']
 
-export default function TrainingModal({ training, onClose }) {
+export default function TrainingModal({ training, prefill = {}, onClose, onCopy }) {
   const { teams, halls, hallAvailabilities, addTraining, updateTraining, deleteTraining } = useApp()
   const isCreate = !training
 
   const initialTeamIds = training
     ? (training.teamIds ?? (training.teamId ? [training.teamId] : []))
-    : []
+    : (prefill.teamIds ?? [])
 
   const [teamId1,   setTeamId1]   = useState(initialTeamIds[0] ?? '')
   const [teamId2,   setTeamId2]   = useState(initialTeamIds[1] ?? '')
-  const [hallId,    setHallId]    = useState(training?.hallId ?? (halls[0]?.id ?? ''))
-  const [dayOfWeek, setDayOfWeek] = useState(training?.dayOfWeek ?? 0)
-  const [startTime, setStartTime] = useState(minutesToTime(training?.startMinute ?? 900))
-  const [endTime,   setEndTime]   = useState(minutesToTime(training?.endMinute   ?? 960))
-  const [note,      setNote]      = useState(training?.note ?? '')
+  const [hallId,    setHallId]    = useState(training?.hallId    ?? prefill.hallId    ?? (halls[0]?.id ?? ''))
+  const [dayOfWeek, setDayOfWeek] = useState(training?.dayOfWeek ?? prefill.dayOfWeek ?? 0)
+  const [startTime, setStartTime] = useState(minutesToTime(training?.startMinute ?? prefill.startMinute ?? 900))
+  const [endTime,   setEndTime]   = useState(minutesToTime(training?.endMinute   ?? prefill.endMinute   ?? 960))
+  const [note,      setNote]      = useState(training?.note ?? prefill.note ?? '')
   const [error,     setError]     = useState(null)
 
   const activeHallId = isCreate ? hallId : training.hallId
@@ -31,6 +31,7 @@ export default function TrainingModal({ training, onClose }) {
     const startMinute = timeToMinutes(startTime)
     const endMinute   = timeToMinutes(endTime)
     if (endMinute <= startMinute) { setError('Čas konce musí být po čase začátku.'); return null }
+    if (endMinute - startMinute < 15) { setError('Trénink musí trvat alespoň 15 minut.'); return null }
     const dow = isCreate ? Number(dayOfWeek) : training.dayOfWeek
     if (!isWithinAvailability(activeHallId, dow, startMinute, endMinute, hallAvailabilities)) {
       setError(`Hala ${hall?.name ?? ''} v tomto čase není dostupná.`)
@@ -151,7 +152,19 @@ export default function TrainingModal({ training, onClose }) {
         {error && <p style={{ color: 'var(--color-danger)', fontSize: 12, marginBottom: 4 }}>{error}</p>}
 
         <div className={`modal__actions${!isCreate ? ' modal__actions--spread' : ''}`}>
-          {!isCreate && <button className="btn btn--danger" onClick={handleDelete}>Smazat</button>}
+          {!isCreate && (
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button className="btn btn--danger" onClick={handleDelete}>Smazat</button>
+              <button className="btn btn--ghost" onClick={() => onCopy?.({
+                hallId: training.hallId,
+                dayOfWeek: training.dayOfWeek,
+                startMinute: training.startMinute,
+                endMinute: training.endMinute,
+                teamIds: initialTeamIds,
+                note,
+              })}>Kopírovat</button>
+            </div>
+          )}
           <div style={{ display: 'flex', gap: 8 }}>
             <button className="btn btn--ghost" onClick={onClose}>Zrušit</button>
             <button className="btn btn--primary" onClick={handleSave}>

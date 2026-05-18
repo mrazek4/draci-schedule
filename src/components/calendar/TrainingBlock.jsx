@@ -42,6 +42,7 @@ export default function TrainingBlock({ training, onClick }) {
     >
       <span className="training-block__short">{label}</span>
       <span className="training-block__time">{timeLabel}</span>
+      {training.note && <span className="training-block__note-dot" />}
     </div>
   )
 }

@@ -3,7 +3,7 @@ import TeamList from './TeamList.jsx'
 import logo from '../../assets/1629729771_club_logo.webp'
 import './Sidebar.css'
 
-export default function Sidebar({ onManageTeams, onManageHalls, onAddTraining }) {
+export default function Sidebar({ onManageTeams, onManageHalls, onAddTraining, theme, onToggleTheme, hiddenTeamIds, onToggleTeam, onShowAll, onHideAll }) {
   const { teams } = useApp()
 
   return (
@@ -16,9 +16,15 @@ export default function Sidebar({ onManageTeams, onManageHalls, onAddTraining })
         </div>
       </div>
 
-      <p className="sidebar__section-title">Týmy</p>
+      <div className="sidebar__section-header">
+        <p className="sidebar__section-title">Týmy</p>
+        <div className="sidebar__filter-btns">
+          <button className="sidebar__filter-btn" onClick={onShowAll}>vše</button>
+          <button className="sidebar__filter-btn" onClick={onHideAll}>žádný</button>
+        </div>
+      </div>
       <div className="sidebar__team-list">
-        <TeamList teams={teams} />
+        <TeamList teams={teams} hiddenTeamIds={hiddenTeamIds} onToggleTeam={onToggleTeam} />
       </div>
 
       <div className="sidebar__actions">
@@ -30,6 +36,9 @@ export default function Sidebar({ onManageTeams, onManageHalls, onAddTraining })
         </button>
         <button className="sidebar__btn" onClick={onManageHalls}>
           <span>🏟</span> Správa hal
+        </button>
+        <button className="sidebar__btn sidebar__btn--theme" onClick={onToggleTheme}>
+          {theme === 'light' ? '◑ Tmavý režim' : '○ Světlý režim'}
         </button>
       </div>
     </div>

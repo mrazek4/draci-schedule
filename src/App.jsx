@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   DndContext,
   DragOverlay,
@@ -23,10 +23,25 @@ function AppInner() {
 
   const [activeItem, setActiveItem]         = useState(null)
   const [trainingModal, setTrainingModal]   = useState(null)
-  const [showAddModal, setShowAddModal]     = useState(false)
+  const [showAddModal, setShowAddModal]     = useState(null)
   const [showTeamModal, setShowTeamModal]   = useState(false)
   const [showHallModal, setShowHallModal]   = useState(false)
   const [toast, setToast]                   = useState(null)
+  const [theme, setTheme]                   = useState(() => localStorage.getItem('theme') || 'light')
+  const [hiddenTeamIds, setHiddenTeamIds]   = useState([])
+
+  function toggleTeamVisibility(teamId) {
+    setHiddenTeamIds((prev) =>
+      prev.includes(teamId) ? prev.filter((id) => id !== teamId) : [...prev, teamId]
+    )
+  }
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+    localStorage.setItem('theme', theme)
+  }, [theme])
+
+  function toggleTheme() { setTheme((t) => (t === 'light' ? 'dark' : 'light')) }
 
   function showToast(msg) {
     setToast(msg)
@@ -125,18 +140,24 @@ function AppInner() {
           <Sidebar
             onManageTeams={() => setShowTeamModal(true)}
             onManageHalls={() => setShowHallModal(true)}
-            onAddTraining={() => setShowAddModal(true)}
+            onAddTraining={() => setShowAddModal({})}
+            theme={theme}
+            onToggleTheme={toggleTheme}
+            hiddenTeamIds={hiddenTeamIds}
+            onToggleTeam={toggleTeamVisibility}
+            onShowAll={() => setHiddenTeamIds([])}
+            onHideAll={() => setHiddenTeamIds(teams.map((t) => t.id))}
           />
         }
       >
-        <CalendarView onTrainingClick={setTrainingModal} />
+        <CalendarView onTrainingClick={setTrainingModal} onSlotClick={(prefill) => setShowAddModal(prefill)} hiddenTeamIds={hiddenTeamIds} />
       </AppShell>
 
       <DragOverlay>{overlayContent}</DragOverlay>
       {toast && <div className="toast">{toast}</div>}
 
-      {showAddModal   && <TrainingModal onClose={() => setShowAddModal(false)} />}
-      {trainingModal  && <TrainingModal training={trainingModal} onClose={() => setTrainingModal(null)} />}
+      {showAddModal !== null && <TrainingModal prefill={showAddModal} onClose={() => setShowAddModal(null)} />}
+      {trainingModal  && <TrainingModal training={trainingModal} onClose={() => setTrainingModal(null)} onCopy={(prefill) => { setTrainingModal(null); setShowAddModal(prefill) }} />}
       {showTeamModal  && <TeamModal onClose={() => setShowTeamModal(false)} />}
       {showHallModal  && <HallModal onClose={() => setShowHallModal(false)} />}
     </DndContext>

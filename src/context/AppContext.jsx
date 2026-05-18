@@ -1,4 +1,4 @@
-import { createContext, useContext, useCallback } from 'react'
+import { createContext, useContext, useCallback, useEffect } from 'react'
 import { useLocalStorage } from '../hooks/useLocalStorage.js'
 import { defaultState } from '../data/defaults.js'
 
@@ -8,6 +8,18 @@ export function AppProvider({ children }) {
   const [state, setState] = useLocalStorage('draci-schedule-v5', defaultState)
 
   const update = useCallback((patch) => setState((s) => ({ ...s, ...patch })), [setState])
+
+  // migrate shortNames that changed
+  useEffect(() => {
+    setState((s) => ({
+      ...s,
+      teams: s.teams.map((t) => {
+        if (t.id === 'mz-ric' && t.shortName !== 'MLŘ') return { ...t, shortName: 'MLŘ' }
+        if (t.id === 'mz-cer' && t.shortName !== 'MLČ') return { ...t, shortName: 'MLČ' }
+        return t
+      }),
+    }))
+  }, [])
 
   // --- Trainings ---
   const addTraining = useCallback((training) => {

@@ -15,8 +15,15 @@ const HDR_H    = 32          // px – time header row
 const DAY_NAMES = ['Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota', 'Neděle']
 const DAY_SHORT = ['PO', 'ÚT', 'ST', 'ČT', 'PÁ', 'SO', 'NE']
 
-export default function CalendarGrid({ onTrainingClick }) {
+export default function CalendarGrid({ onTrainingClick, onSlotClick, hiddenTeamIds = [] }) {
   const { halls, hallAvailabilities, trainings } = useApp()
+
+  const visibleTrainings = hiddenTeamIds.length === 0
+    ? trainings
+    : trainings.filter((t) => {
+        const ids = t.teamIds ?? (t.teamId ? [t.teamId] : [])
+        return ids.some((id) => !hiddenTeamIds.includes(id))
+      })
 
   if (!halls.length || !hallAvailabilities.length) {
     return (
@@ -139,6 +146,9 @@ export default function CalendarGrid({ onTrainingClick }) {
                     borderTop: `1px solid var(--color-border)`,
                     borderBottom: `1px solid var(--color-border)`,
                   }}
+                  onClick={onSlotClick
+                    ? () => onSlotClick({ hallId: row.hall.id, dayOfWeek: row.dayOfWeek, startMinute: minute, endMinute: minute + 60 })
+                    : undefined}
                 />
               )
             }),
@@ -146,7 +156,7 @@ export default function CalendarGrid({ onTrainingClick }) {
         })}
 
         {/* ── training blocks ── */}
-        {trainings.map((training) => {
+        {visibleTrainings.map((training) => {
           const ri = rowIndex(training.dayOfWeek, training.hallId)
           if (ri === -1) return null
           const colStart = timeCol(training.startMinute)

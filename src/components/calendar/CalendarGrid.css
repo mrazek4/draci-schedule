@@ -57,6 +57,22 @@
   border-right: 1px solid var(--color-border);
   width: 100%;
   min-height: 100%;
+  position: relative;
+}
+
+.calendar-grid-h::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-color: var(--color-unavailable-bg);
+  background-image: repeating-linear-gradient(
+    135deg,
+    var(--color-unavailable-line) 0px,
+    var(--color-unavailable-line) 2px,
+    transparent 2px,
+    transparent 8px
+  );
 }
 
 /* ── corner cell ── */
@@ -174,7 +190,7 @@
 
 /* ── time slot cells ── */
 .time-slot {
-  border-right: 1px solid rgba(0, 0, 0, 0.05);
+  border-right: 1px solid var(--color-slot-border);
   border-bottom: 1px solid var(--color-border);
   transition: background 0.1s;
   position: relative;
@@ -182,32 +198,26 @@
 }
 
 .time-slot--hour-mark {
-  border-right-color: rgba(0, 0, 0, 0.12);
+  border-right-color: var(--color-slot-hour-border);
 }
 
 .time-slot--unavailable {
   cursor: default;
-  background: repeating-linear-gradient(
-    -45deg,
-    #edf0fa,
-    #edf0fa 4px,
-    #d8dff2 4px,
-    #d8dff2 5px
-  ) !important;
-  border-right-color: rgba(0, 0, 0, 0.04) !important;
+  background: transparent !important;
+  border-right-color: rgba(38, 71, 217, 0.08) !important;
 }
 
 .time-slot--available {
-  cursor: copy;
-  background: #ffffff;
+  cursor: pointer;
+  background: var(--color-slot-available);
 }
 
 .time-slot--available:hover {
-  background: var(--color-slot-hover) !important;
+  background: var(--color-slot-hover-solid) !important;
 }
 
 .time-slot--over {
-  background: var(--color-slot-over) !important;
+  background: var(--color-slot-over-solid) !important;
 }
 
 /* ── training block ── */
@@ -252,6 +262,17 @@
   font-size: 10px;
   opacity: 0.8;
   white-space: nowrap;
+}
+
+.training-block__note-dot {
+  position: absolute;
+  bottom: 4px;
+  right: 5px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.7);
+  flex-shrink: 0;
 }
 
 /* ── drag overlays ── */
