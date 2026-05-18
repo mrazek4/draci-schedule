@@ -189,12 +189,12 @@
   cursor: default;
   background: repeating-linear-gradient(
     -45deg,
-    transparent,
-    transparent 4px,
-    rgba(38, 71, 217, 0.04) 4px,
-    rgba(38, 71, 217, 0.04) 5px
+    #edf0fa,
+    #edf0fa 4px,
+    #d8dff2 4px,
+    #d8dff2 5px
   ) !important;
-  border-right-color: transparent !important;
+  border-right-color: rgba(0, 0, 0, 0.04) !important;
 }
 
 .time-slot--available {
