@@ -23,6 +23,7 @@ function AppInner() {
 
   const [activeItem, setActiveItem]         = useState(null)
   const [trainingModal, setTrainingModal]   = useState(null)
+  const [showAddModal, setShowAddModal]     = useState(false)
   const [showTeamModal, setShowTeamModal]   = useState(false)
   const [showHallModal, setShowHallModal]   = useState(false)
   const [toast, setToast]                   = useState(null)
@@ -61,7 +62,7 @@ function AppInner() {
         return
       }
       addTraining({
-        teamId: drag.teamId,
+        teamIds: [drag.teamId],
         hallId: slot.hallId,
         dayOfWeek: slot.dayOfWeek,
         startMinute: slot.startMinute,
@@ -124,6 +125,7 @@ function AppInner() {
           <Sidebar
             onManageTeams={() => setShowTeamModal(true)}
             onManageHalls={() => setShowHallModal(true)}
+            onAddTraining={() => setShowAddModal(true)}
           />
         }
       >
@@ -133,11 +135,10 @@ function AppInner() {
       <DragOverlay>{overlayContent}</DragOverlay>
       {toast && <div className="toast">{toast}</div>}
 
-      {trainingModal && (
-        <TrainingModal training={trainingModal} onClose={() => setTrainingModal(null)} />
-      )}
-      {showTeamModal && <TeamModal onClose={() => setShowTeamModal(false)} />}
-      {showHallModal && <HallModal onClose={() => setShowHallModal(false)} />}
+      {showAddModal   && <TrainingModal onClose={() => setShowAddModal(false)} />}
+      {trainingModal  && <TrainingModal training={trainingModal} onClose={() => setTrainingModal(null)} />}
+      {showTeamModal  && <TeamModal onClose={() => setShowTeamModal(false)} />}
+      {showHallModal  && <HallModal onClose={() => setShowHallModal(false)} />}
     </DndContext>
   )
 }

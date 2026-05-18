@@ -4,32 +4,66 @@ import { minutesToTime, timeToMinutes } from '../../utils/timeUtils.js'
 import { isWithinAvailability } from '../../utils/calendarUtils.js'
 import './Modal.css'
 
+const DAY_NAMES = ['Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek']
+
 export default function TrainingModal({ training, onClose }) {
-  const { teams, halls, hallAvailabilities, updateTraining, deleteTraining } = useApp()
-  const team = teams.find((t) => t.id === training.teamId)
-  const hall = halls.find((h) => h.id === training.hallId)
+  const { teams, halls, hallAvailabilities, addTraining, updateTraining, deleteTraining } = useApp()
+  const isCreate = !training
 
-  const [startTime, setStartTime] = useState(minutesToTime(training.startMinute))
-  const [endTime, setEndTime]     = useState(minutesToTime(training.endMinute))
-  const [note, setNote]           = useState(training.note ?? '')
-  const [error, setError]         = useState(null)
+  const initialTeamIds = training
+    ? (training.teamIds ?? (training.teamId ? [training.teamId] : []))
+    : []
 
-  function handleSave() {
+  const [teamId1,   setTeamId1]   = useState(initialTeamIds[0] ?? '')
+  const [teamId2,   setTeamId2]   = useState(initialTeamIds[1] ?? '')
+  const [hallId,    setHallId]    = useState(training?.hallId ?? (halls[0]?.id ?? ''))
+  const [dayOfWeek, setDayOfWeek] = useState(training?.dayOfWeek ?? 0)
+  const [startTime, setStartTime] = useState(minutesToTime(training?.startMinute ?? 900))
+  const [endTime,   setEndTime]   = useState(minutesToTime(training?.endMinute   ?? 960))
+  const [note,      setNote]      = useState(training?.note ?? '')
+  const [error,     setError]     = useState(null)
+
+  const activeHallId = isCreate ? hallId : training.hallId
+  const hall = halls.find((h) => h.id === activeHallId)
+
+  function validate() {
+    if (!teamId1) { setError('Vyber alespoň jeden tým.'); return null }
     const startMinute = timeToMinutes(startTime)
     const endMinute   = timeToMinutes(endTime)
-    if (endMinute <= startMinute) {
-      setError('Čas konce musí být po čase začátku.')
-      return
-    }
-    const valid = isWithinAvailability(
-      training.hallId, training.dayOfWeek, startMinute, endMinute, hallAvailabilities
-    )
-    if (!valid) {
+    if (endMinute <= startMinute) { setError('Čas konce musí být po čase začátku.'); return null }
+    const dow = isCreate ? Number(dayOfWeek) : training.dayOfWeek
+    if (!isWithinAvailability(activeHallId, dow, startMinute, endMinute, hallAvailabilities)) {
       setError(`Hala ${hall?.name ?? ''} v tomto čase není dostupná.`)
-      return
+      return null
     }
     setError(null)
-    updateTraining(training.id, { startMinute, endMinute, note })
+    return {
+      startMinute,
+      endMinute,
+      teamIds: [teamId1, ...(teamId2 ? [teamId2] : [])],
+    }
+  }
+
+  function handleSave() {
+    const result = validate()
+    if (!result) return
+    if (isCreate) {
+      addTraining({
+        teamIds: result.teamIds,
+        hallId,
+        dayOfWeek: Number(dayOfWeek),
+        startMinute: result.startMinute,
+        endMinute: result.endMinute,
+        note,
+      })
+    } else {
+      updateTraining(training.id, {
+        teamIds: result.teamIds,
+        startMinute: result.startMinute,
+        endMinute: result.endMinute,
+        note,
+      })
+    }
     onClose()
   }
 
@@ -38,47 +72,70 @@ export default function TrainingModal({ training, onClose }) {
     onClose()
   }
 
-  const DAY_NAMES = ['Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota', 'Neděle']
+  const title = isCreate
+    ? 'Nový trénink'
+    : (teams.filter((t) => initialTeamIds.includes(t.id)).map((t) => t.name).join(' + ') || 'Trénink')
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal__header">
-          <h2 className="modal__title" style={{ color: team?.color }}>
-            {team?.name ?? 'Trénink'}
-          </h2>
+          <h2 className="modal__title">{title}</h2>
           <button className="modal__close" onClick={onClose}>×</button>
         </div>
 
         <div className="modal__field">
           <label className="modal__label">Hala</label>
-          <p style={{ fontSize: 13, color: 'var(--color-text)' }}>{hall?.name ?? '–'}</p>
+          {isCreate ? (
+            <select className="modal__select" value={hallId} onChange={(e) => setHallId(e.target.value)}>
+              {halls.map((h) => <option key={h.id} value={h.id}>{h.name}</option>)}
+            </select>
+          ) : (
+            <p style={{ fontSize: 13, color: 'var(--color-text)' }}>{hall?.name ?? '–'}</p>
+          )}
         </div>
 
         <div className="modal__field">
           <label className="modal__label">Den</label>
-          <p style={{ fontSize: 13, color: 'var(--color-text)' }}>{DAY_NAMES[training.dayOfWeek]}</p>
+          {isCreate ? (
+            <select className="modal__select" value={dayOfWeek} onChange={(e) => setDayOfWeek(e.target.value)}>
+              {DAY_NAMES.map((d, i) => <option key={i} value={i}>{d}</option>)}
+            </select>
+          ) : (
+            <p style={{ fontSize: 13, color: 'var(--color-text)' }}>{DAY_NAMES[training.dayOfWeek]}</p>
+          )}
         </div>
 
         <div className="modal__row">
           <div className="modal__field">
             <label className="modal__label">Od</label>
-            <input
-              type="time"
-              className="modal__input"
-              value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
-            />
+            <input type="time" className="modal__input" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
           </div>
           <div className="modal__field">
             <label className="modal__label">Do</label>
-            <input
-              type="time"
-              className="modal__input"
-              value={endTime}
-              onChange={(e) => setEndTime(e.target.value)}
-            />
+            <input type="time" className="modal__input" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
           </div>
+        </div>
+
+        <div className="modal__field">
+          <label className="modal__label">Tým 1</label>
+          <select className="modal__select" value={teamId1} onChange={(e) => setTeamId1(e.target.value)}>
+            <option value="">– vyber tým –</option>
+            {teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+          </select>
+        </div>
+
+        <div className="modal__field">
+          <label className="modal__label">
+            Tým 2{' '}
+            <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>
+              (volitelný – společný trénink)
+            </span>
+          </label>
+          <select className="modal__select" value={teamId2} onChange={(e) => setTeamId2(e.target.value)}>
+            <option value="">– žádný –</option>
+            {teams.filter((t) => t.id !== teamId1).map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+          </select>
         </div>
 
         <div className="modal__field">
@@ -91,15 +148,15 @@ export default function TrainingModal({ training, onClose }) {
           />
         </div>
 
-        {error && (
-          <p style={{ color: 'var(--color-danger)', fontSize: 12, marginBottom: 4 }}>{error}</p>
-        )}
+        {error && <p style={{ color: 'var(--color-danger)', fontSize: 12, marginBottom: 4 }}>{error}</p>}
 
-        <div className="modal__actions modal__actions--spread">
-          <button className="btn btn--danger" onClick={handleDelete}>Smazat</button>
+        <div className={`modal__actions${!isCreate ? ' modal__actions--spread' : ''}`}>
+          {!isCreate && <button className="btn btn--danger" onClick={handleDelete}>Smazat</button>}
           <div style={{ display: 'flex', gap: 8 }}>
             <button className="btn btn--ghost" onClick={onClose}>Zrušit</button>
-            <button className="btn btn--primary" onClick={handleSave}>Uložit</button>
+            <button className="btn btn--primary" onClick={handleSave}>
+              {isCreate ? 'Přidat' : 'Uložit'}
+            </button>
           </div>
         </div>
       </div>

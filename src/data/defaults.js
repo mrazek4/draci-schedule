@@ -1,54 +1,50 @@
 export const defaultHalls = [
-  { id: 'hala-ricany', name: 'Hala Říčany', color: '#4f6ef7' },
-  { id: 'sokolovna', name: 'Sokolovna', color: '#8b5cf6' },
+  { id: 'gymnazium',    name: 'Gymnázium',    color: '#4f6ef7' },
+  { id: 'cercany',      name: 'Čerčany',      color: '#10b981' },
+  { id: 'fialka',       name: 'Fialka',       color: '#ec4899' },
+  { id: 'mestska-hala', name: 'Městská hala', color: '#f59e0b' },
+  { id: 'pet-zs',       name: '5.ZŠ',         color: '#8b5cf6' },
 ]
 
 export const defaultHallAvailabilities = [
-  // Hala Říčany: Po–Pá 15:00–22:00, So–Ne 09:00–20:00
-  { id: 'av-1', hallId: 'hala-ricany', dayOfWeek: 0, startMinute: 900, endMinute: 1320 },
-  { id: 'av-2', hallId: 'hala-ricany', dayOfWeek: 1, startMinute: 900, endMinute: 1320 },
-  { id: 'av-3', hallId: 'hala-ricany', dayOfWeek: 2, startMinute: 900, endMinute: 1320 },
-  { id: 'av-4', hallId: 'hala-ricany', dayOfWeek: 3, startMinute: 900, endMinute: 1320 },
-  { id: 'av-5', hallId: 'hala-ricany', dayOfWeek: 4, startMinute: 900, endMinute: 1320 },
-  { id: 'av-6', hallId: 'hala-ricany', dayOfWeek: 5, startMinute: 540, endMinute: 1200 },
-  { id: 'av-7', hallId: 'hala-ricany', dayOfWeek: 6, startMinute: 540, endMinute: 1200 },
-  // Sokolovna: Po–Pá 16:00–21:00
-  { id: 'av-8', hallId: 'sokolovna', dayOfWeek: 0, startMinute: 960, endMinute: 1260 },
-  { id: 'av-9', hallId: 'sokolovna', dayOfWeek: 1, startMinute: 960, endMinute: 1260 },
-  { id: 'av-10', hallId: 'sokolovna', dayOfWeek: 2, startMinute: 960, endMinute: 1260 },
-  { id: 'av-11', hallId: 'sokolovna', dayOfWeek: 3, startMinute: 960, endMinute: 1260 },
-  { id: 'av-12', hallId: 'sokolovna', dayOfWeek: 4, startMinute: 960, endMinute: 1260 },
+  // Gymnázium: Po 17:00–21:30, Út 17:00–21:30, Čt 17:00–21:30
+  { id: 'av-gym-0', hallId: 'gymnazium', dayOfWeek: 0, startMinute: 1020, endMinute: 1290 },
+  { id: 'av-gym-1', hallId: 'gymnazium', dayOfWeek: 1, startMinute: 1020, endMinute: 1290 },
+  { id: 'av-gym-3', hallId: 'gymnazium', dayOfWeek: 3, startMinute: 1020, endMinute: 1290 },
+  // Čerčany: Út 16:30–19:30, St 18:00–19:30, Čt 17:45–19:15
+  { id: 'av-cer-1', hallId: 'cercany', dayOfWeek: 1, startMinute:  990, endMinute: 1170 },
+  { id: 'av-cer-2', hallId: 'cercany', dayOfWeek: 2, startMinute: 1080, endMinute: 1170 },
+  { id: 'av-cer-3', hallId: 'cercany', dayOfWeek: 3, startMinute: 1065, endMinute: 1155 },
+  // Fialka: Čt 18:00–19:30
+  { id: 'av-fia-3', hallId: 'fialka',  dayOfWeek: 3, startMinute: 1080, endMinute: 1170 },
+  // Městská hala: St 17:30–21:30
+  { id: 'av-mh-2',  hallId: 'mestska-hala', dayOfWeek: 2, startMinute: 1050, endMinute: 1290 },
+  // 5.ZŠ: Po 17:30–21:30, Út 19:00–20:00, St 17:00–21:30, Čt 19:00–21:30
+  { id: 'av-5zs-0', hallId: 'pet-zs', dayOfWeek: 0, startMinute: 1050, endMinute: 1290 },
+  { id: 'av-5zs-1', hallId: 'pet-zs', dayOfWeek: 1, startMinute: 1140, endMinute: 1200 },
+  { id: 'av-5zs-2', hallId: 'pet-zs', dayOfWeek: 2, startMinute: 1020, endMinute: 1290 },
+  { id: 'av-5zs-3', hallId: 'pet-zs', dayOfWeek: 3, startMinute: 1140, endMinute: 1290 },
 ]
 
 export const defaultTeams = [
-  { id: 'u8',      name: 'U8',       shortName: 'U8',  color: '#f59e0b' },
-  { id: 'u10',     name: 'U10',      shortName: 'U10', color: '#10b981' },
-  { id: 'u12',     name: 'U12',      shortName: 'U12', color: '#ef4444' },
-  { id: 'u14',     name: 'U14',      shortName: 'U14', color: '#3b82f6' },
-  { id: 'u16',     name: 'U16',      shortName: 'U16', color: '#ec4899' },
-  { id: 'dospeli', name: 'Dospělí',  shortName: 'DOS', color: '#f97316' },
+  { id: 'muzi-a',   name: 'Muži A',                shortName: 'MŽA', color: '#e53e3e' },
+  { id: 'muzi-b',   name: 'Muži B',                shortName: 'MŽB', color: '#dd6b20' },
+  { id: 'muzi-c',   name: 'Muži C',                shortName: 'MŽC', color: '#d69e2e' },
+  { id: 'juniori',  name: 'Junioři',               shortName: 'JUN', color: '#38a169' },
+  { id: 'dorost-a', name: 'Dorost A',              shortName: 'DOA', color: '#3182ce' },
+  { id: 'dorost-b', name: 'Dorost B',              shortName: 'DOB', color: '#00b5d8' },
+  { id: 'sz',       name: 'Starší žáci',           shortName: 'SŽ',  color: '#805ad5' },
+  { id: 'sz-b',     name: 'Starší žáci B',         shortName: 'SŽB', color: '#b83280' },
+  { id: 'mz-ric',   name: 'Mladší žáci Říčany',   shortName: 'MŽŘ', color: '#2c7a7b' },
+  { id: 'mz-cer',   name: 'Mladší žáci Čerčany',  shortName: 'MŽČ', color: '#276749' },
+  { id: 'el-ric',   name: 'Elévové Říčany',        shortName: 'ELŘ', color: '#c05621' },
+  { id: 'el-cer',   name: 'Elévové Čerčany',       shortName: 'ELČ', color: '#975a16' },
+  { id: 'pr-cer',   name: 'Přípravka Čerčany',     shortName: 'PČ',  color: '#2b6cb0' },
+  { id: 'pr-ric',   name: 'Přípravka Říčany',      shortName: 'PŘ',  color: '#553c9a' },
+  { id: 'brankari', name: 'Brankáři',              shortName: 'BR',  color: '#4a5568' },
 ]
 
-export const defaultTrainings = [
-  {
-    id: 'tr-1',
-    teamId: 'u10',
-    hallId: 'hala-ricany',
-    dayOfWeek: 0,
-    startMinute: 960,
-    endMinute: 1080,
-    note: '',
-  },
-  {
-    id: 'tr-2',
-    teamId: 'u14',
-    hallId: 'sokolovna',
-    dayOfWeek: 2,
-    startMinute: 1020,
-    endMinute: 1140,
-    note: '',
-  },
-]
+export const defaultTrainings = []
 
 export const defaultState = {
   halls: defaultHalls,

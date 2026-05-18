@@ -9,9 +9,10 @@ export default function TimeSlot({ dayOfWeek, hallId, startMinute, available, st
   })
 
   let cls = 'time-slot'
-  if (!available) cls += ' time-slot--unavailable'
-  else cls += ' time-slot--available'
-  if (isOver && available) cls += ' time-slot--over'
+  if (!available)             cls += ' time-slot--unavailable'
+  else                        cls += ' time-slot--available'
+  if (isOver && available)    cls += ' time-slot--over'
+  if (startMinute % 60 === 0) cls += ' time-slot--hour-mark'
 
   return (
     <div ref={setNodeRef} className={cls} style={style}>

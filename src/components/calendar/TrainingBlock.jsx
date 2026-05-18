@@ -5,7 +5,10 @@ import { useApp } from '../../context/AppContext.jsx'
 
 export default function TrainingBlock({ training, onClick }) {
   const { teams, trainings } = useApp()
-  const team = teams.find((t) => t.id === training.teamId)
+
+  const teamIds = training.teamIds ?? (training.teamId ? [training.teamId] : [])
+  const primaryTeam = teams.find((t) => t.id === teamIds[0])
+  const secondTeam  = teamIds[1] ? teams.find((t) => t.id === teamIds[1]) : null
 
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `training-${training.id}`,
@@ -14,13 +17,19 @@ export default function TrainingBlock({ training, onClick }) {
 
   const conflict = hasConflict(trainings, training)
 
-  const label = team?.shortName ?? '?'
-  const bg = team?.color ?? '#555'
+  const label = teamIds
+    .map((id) => teams.find((t) => t.id === id)?.shortName ?? '?')
+    .join('+')
+
+  const bg = secondTeam
+    ? `linear-gradient(135deg, ${primaryTeam?.color ?? '#555'} 50%, ${secondTeam.color} 50%)`
+    : (primaryTeam?.color ?? '#555')
+
   const timeLabel = `${minutesToTime(training.startMinute)}–${minutesToTime(training.endMinute)}`
 
   let cls = 'training-block'
   if (isDragging) cls += ' training-block--dragging'
-  if (conflict) cls += ' training-block--conflict'
+  if (conflict)   cls += ' training-block--conflict'
 
   return (
     <div
