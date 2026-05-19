@@ -12,16 +12,17 @@ npm run preview  # preview production build
 
 ## Architecture
 
-Single-page React 18 + Vite app. No router. State persists to `localStorage` under key `draci-schedule-v6`.
+Single-page React 18 + Vite app. No router. State persists to Upstash Redis (via `/api/state`) under key `draci-schedule-v7`, with localStorage fallback.
 
 ### State (`src/context/AppContext.jsx`)
-Central context wraps all data and CRUD actions. `useLocalStorage` hook auto-syncs to localStorage. Components call `useApp()` to access state and actions. Never write to localStorage directly.
+Central context wraps all data and CRUD actions. `useServerStorage` hook syncs to Redis via `/api/state`. Components call `useApp()` to access state and actions.
 
 ### Data model
 - **Hall** `{ id, name, color }` – physical sports hall
 - **HallAvailability** `{ id, hallId, dayOfWeek, startMinute, endMinute }` – recurring weekly availability windows; time in minutes from midnight (e.g. 900 = 15:00)
 - **Team** `{ id, name, shortName, color }` – age group / team
-- **Training** `{ id, teamId, hallId, dayOfWeek, startMinute, endMinute, note }` – weekly recurring (no specific date); `dayOfWeek`: 0=Mon … 6=Sun
+- **Training** `{ id, teamIds[], hallId, dayOfWeek, startMinute, endMinute, note }` – weekly recurring; `dayOfWeek`: 0=Mon … 6=Sun
+- **Season** `{ id, name }` – training season (e.g. "2025/2026"); trainings are stored per-season in `trainingsBySeason`
 
 ### Calendar grid (`src/components/calendar/CalendarGrid.jsx`)
 CSS Grid with axes: Time (Y) × Day (X) × Hall (sub-column per day).

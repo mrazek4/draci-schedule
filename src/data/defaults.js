@@ -44,12 +44,14 @@ export const defaultTeams = [
   { id: 'brankari', name: 'Brankáři',              shortName: 'BR',  color: '#4a5568' },
 ]
 
-export const defaultTrainings = []
+const DEFAULT_SEASON_ID = '2025-2026'
 
 export const defaultState = {
   halls: defaultHalls,
   hallAvailabilities: defaultHallAvailabilities,
   teams: defaultTeams,
-  trainings: defaultTrainings,
+  seasons: [{ id: DEFAULT_SEASON_ID, name: '2025/2026' }],
+  currentSeasonId: DEFAULT_SEASON_ID,
+  trainingsBySeason: { [DEFAULT_SEASON_ID]: [] },
   weekOffset: 0,
 }

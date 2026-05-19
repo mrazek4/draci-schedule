@@ -35,6 +35,67 @@
   margin-top: 2px;
 }
 
+/* ── season selector ── */
+.sidebar__season {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--color-sidebar-border);
+}
+
+.sidebar__season-select {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-sm);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 8px;
+  cursor: pointer;
+  outline: none;
+  min-width: 0;
+}
+
+.sidebar__season-select:focus {
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.sidebar__season-select option {
+  background: #1e2433;
+  color: #fff;
+}
+
+.sidebar__season-btn {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-sidebar-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+}
+
+.sidebar__season-btn:hover:not(:disabled) {
+  background: var(--color-sidebar-hover);
+  color: #ffffff;
+}
+
+.sidebar__season-btn:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+.sidebar__season-btn--del:hover:not(:disabled) {
+  background: rgba(220, 38, 38, 0.3);
+  color: #fca5a5;
+}
+
 /* ── section title ── */
 .sidebar__section-title {
   padding: 14px 14px 6px;

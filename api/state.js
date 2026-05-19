@@ -1,7 +1,7 @@
 import { Redis } from '@upstash/redis'
 
 const redis = Redis.fromEnv()
-const KEY = 'draci-schedule-v6'
+const KEY = 'draci-schedule-v7'
 
 export default async function handler(req, res) {
   if (req.method === 'GET') {
