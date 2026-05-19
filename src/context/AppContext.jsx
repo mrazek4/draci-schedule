@@ -192,6 +192,47 @@ export function AppProvider({ children }) {
     }))
   }, [setState])
 
+  // Like setTrainingsForSeason but also expands hallAvailabilities to cover all imported trainings.
+  // Single atomic setState — no stale-closure issues.
+  const importTrainings = useCallback((seasonId, newTrainings) => {
+    setState((s) => {
+      // Group imported trainings by hallId → dayOfWeek → min start / max end
+      const byHall = {}
+      for (const t of newTrainings) {
+        if (!byHall[t.hallId]) byHall[t.hallId] = {}
+        const d = t.dayOfWeek
+        if (!byHall[t.hallId][d]) byHall[t.hallId][d] = { start: t.startMinute, end: t.endMinute }
+        else {
+          byHall[t.hallId][d].start = Math.min(byHall[t.hallId][d].start, t.startMinute)
+          byHall[t.hallId][d].end   = Math.max(byHall[t.hallId][d].end,   t.endMinute)
+        }
+      }
+
+      let avails = [...s.hallAvailabilities]
+      for (const [hallId, days] of Object.entries(byHall)) {
+        for (const [day, { start, end }] of Object.entries(days)) {
+          const dayNum = parseInt(day)
+          const idx = avails.findIndex((a) => a.hallId === hallId && a.dayOfWeek === dayNum)
+          if (idx === -1) {
+            avails.push({ id: crypto.randomUUID(), hallId, dayOfWeek: dayNum, startMinute: start, endMinute: end })
+          } else {
+            avails = avails.map((a, i) => i !== idx ? a : {
+              ...a,
+              startMinute: Math.min(a.startMinute, start),
+              endMinute:   Math.max(a.endMinute,   end),
+            })
+          }
+        }
+      }
+
+      return {
+        ...s,
+        trainingsBySeason: { ...(s.trainingsBySeason ?? {}), [seasonId]: newTrainings },
+        hallAvailabilities: avails,
+      }
+    })
+  }, [setState])
+
   // --- Week navigation ---
   const setWeekOffset = useCallback((offset) => update({ weekOffset: offset }), [update])
 
@@ -202,7 +243,7 @@ export function AppProvider({ children }) {
     addTraining, moveTraining, updateTraining, deleteTraining,
     addHall, updateHall, deleteHall, setHallAvailabilities,
     addTeam, updateTeam, deleteTeam,
-    addSeason, deleteSeason, setCurrentSeason, setTrainingsForSeason,
+    addSeason, deleteSeason, setCurrentSeason, setTrainingsForSeason, importTrainings,
     setWeekOffset,
   }
 
