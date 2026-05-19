@@ -100,7 +100,7 @@ export function AppProvider({ children }) {
 
   // --- Halls ---
   const addHall = useCallback((hall) => {
-    setState((s) => ({ ...s, halls: [...s.halls, { ...hall, id: crypto.randomUUID() }] }))
+    setState((s) => ({ ...s, halls: [...s.halls, { id: crypto.randomUUID(), ...hall }] }))
   }, [setState])
 
   const updateHall = useCallback((hallId, patch) => {

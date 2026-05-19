@@ -68,6 +68,7 @@ export function parseExcelTrainings(file, teams, halls) {
         }
 
         const trainings = []
+        const unknownHalls = {}
         let skipped = 0
 
         for (let r = 1; r <= range.e.r; r++) {
@@ -76,10 +77,6 @@ export function parseExcelTrainings(file, teams, halls) {
 
           const dayOfWeek = DAY_MAP[denText.toUpperCase()]
           if (dayOfWeek === undefined) continue
-
-          const halaText = getCellText(ws, r, halaCol)
-          const hall = findHall(halaText, halls)
-          if (!hall) { skipped++; continue }
 
           const kat1Text = getCellText(ws, r, kat1Col)
           const team1 = findTeam(kat1Text, teams)
@@ -92,8 +89,24 @@ export function parseExcelTrainings(file, teams, halls) {
           const doCell = ws[XLSX.utils.encode_cell({ r, c: doCol })]
           const startMinute = parseCellTime(odCell)
           const endMinute   = parseCellTime(doCell)
-
           if (startMinute == null || endMinute == null || endMinute <= startMinute) { skipped++; continue }
+
+          const halaText = getCellText(ws, r, halaCol)
+          const hall = findHall(halaText, halls)
+
+          if (!hall) {
+            // Hall unknown but team is valid — collect for mapping dialog
+            const key = halaText || '?'
+            if (!unknownHalls[key]) unknownHalls[key] = []
+            unknownHalls[key].push({
+              dayOfWeek,
+              startMinute,
+              endMinute,
+              teamIds: [team1.id, ...(team2 ? [team2.id] : [])],
+              note: '',
+            })
+            continue
+          }
 
           trainings.push({
             teamIds: [team1.id, ...(team2 ? [team2.id] : [])],
@@ -105,7 +118,7 @@ export function parseExcelTrainings(file, teams, halls) {
           })
         }
 
-        resolve({ trainings, skipped })
+        resolve({ trainings, skipped, unknownHalls })
       } catch (err) {
         reject(err)
       }
