@@ -1,3 +1,5 @@
+import ExcelJS from 'exceljs'
+
 const DAY_NAMES = ['PO', 'ÚT', 'ST', 'ČT', 'PÁ', 'SO', 'NE']
 
 function minutesToTimeStr(minutes) {
@@ -17,8 +19,6 @@ export async function exportToExcel(trainings, teams, halls) {
     alert('Žádné tréninky k exportu.')
     return
   }
-
-  const { default: ExcelJS } = await import('exceljs')
 
   const sorted = [...trainings].sort((a, b) =>
     a.dayOfWeek !== b.dayOfWeek ? a.dayOfWeek - b.dayOfWeek : a.startMinute - b.startMinute
