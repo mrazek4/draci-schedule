@@ -6,35 +6,37 @@ const DAY_MAP = {
 
 function parseCellTime(cell) {
   if (!cell) return null
-  // Formatted string "16:15"
   const src = cell.w || (typeof cell.v === 'string' ? cell.v : null)
   if (src) {
     const m = String(src).match(/^(\d{1,2}):(\d{2})$/)
     if (m) return parseInt(m[1]) * 60 + parseInt(m[2])
   }
-  // Excel numeric time fraction (0..1)
   if (typeof cell.v === 'number' && cell.v > 0 && cell.v < 1) {
     return Math.round(cell.v * 24 * 60)
   }
   return null
 }
 
-function findHall(cellValue, halls) {
-  const name = String(cellValue || '').trim().toLowerCase()
-  if (!name) return null
-  return halls.find(
-    (h) => h.name.toLowerCase().includes(name) || name.includes(h.name.toLowerCase())
-  ) ?? null
+function getCellText(ws, r, c) {
+  const cell = ws[XLSX.utils.encode_cell({ r, c })]
+  if (!cell) return null
+  return (cell.w ?? (cell.v != null ? String(cell.v) : null))?.trim() ?? null
 }
 
-function findTeams(cellText, teams) {
-  if (!cellText) return []
-  return String(cellText)
-    .split(/\s*\+\s*/)
-    .map((s) => s.trim())
-    .filter(Boolean)
-    .map((abbr) => teams.find((t) => t.shortName.toUpperCase() === abbr.toUpperCase()))
-    .filter(Boolean)
+function findHall(value, halls) {
+  const v = String(value || '').trim()
+  if (!v) return null
+  const byCode = halls.find((h) => h.code && h.code.toUpperCase() === v.toUpperCase())
+  if (byCode) return byCode
+  const lower = v.toLowerCase()
+  return halls.find((h) => h.name.toLowerCase().includes(lower) || lower.includes(h.name.toLowerCase())) ?? null
+}
+
+function findTeam(value, teams) {
+  if (!value) return null
+  const abbr = String(value).trim()
+  if (!abbr) return null
+  return teams.find((t) => t.shortName.toUpperCase() === abbr.toUpperCase()) ?? null
 }
 
 export function parseExcelTrainings(file, teams, halls) {
@@ -46,76 +48,61 @@ export function parseExcelTrainings(file, teams, halls) {
         const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array', cellStyles: false })
         const ws = wb.Sheets[wb.SheetNames[0]]
         const range = XLSX.utils.decode_range(ws['!ref'])
-        const merges = ws['!merges'] || []
 
-        // Build col → minute map from header row (row 0), starting at col 2
-        const colToMinute = {}
-        for (let c = 2; c <= range.e.c; c++) {
-          const mins = parseCellTime(ws[XLSX.utils.encode_cell({ r: 0, c })])
-          if (mins !== null) colToMinute[c] = mins
+        // Build column map from header row
+        const colMap = {}
+        for (let c = 0; c <= range.e.c; c++) {
+          const cell = ws[XLSX.utils.encode_cell({ r: 0, c })]
+          if (cell?.v) colMap[String(cell.v).toLowerCase().trim()] = c
+        }
+
+        const denCol = colMap['den']
+        const halaCol = colMap['hala']
+        const kat1Col = colMap['kategorie']
+        const kat2Col = colMap['kategorie2']
+        const odCol   = colMap['od']
+        const doCol   = colMap['do']
+
+        if (denCol == null || halaCol == null || kat1Col == null || odCol == null || doCol == null) {
+          throw new Error('Soubor neobsahuje očekávané sloupce (DEN, HALA, KATEGORIE, OD, DO).')
         }
 
         const trainings = []
         let skipped = 0
 
         for (let r = 1; r <= range.e.r; r++) {
-          const dayCell = ws[XLSX.utils.encode_cell({ r, c: 0 })]
-          const hallCell = ws[XLSX.utils.encode_cell({ r, c: 1 })]
-          if (!dayCell || !hallCell) continue
+          const denText = getCellText(ws, r, denCol)
+          if (!denText) continue
 
-          const dayAbbr = String(dayCell.v || '').trim().toUpperCase()
-          const dayOfWeek = DAY_MAP[dayAbbr]
+          const dayOfWeek = DAY_MAP[denText.toUpperCase()]
           if (dayOfWeek === undefined) continue
 
-          const hall = findHall(hallCell.v, halls)
+          const halaText = getCellText(ws, r, halaCol)
+          const hall = findHall(halaText, halls)
           if (!hall) { skipped++; continue }
 
-          // Process merged cells in this row
-          const rowMerges = merges.filter((m) => m.s.r === r && m.s.c >= 2)
-          const coveredCols = new Set()
+          const kat1Text = getCellText(ws, r, kat1Col)
+          const team1 = findTeam(kat1Text, teams)
+          if (!team1) { skipped++; continue }
 
-          for (const merge of rowMerges) {
-            const startMinute = colToMinute[merge.s.c]
-            const endMinute = colToMinute[merge.e.c + 1]
-            if (startMinute == null || endMinute == null) continue
+          const kat2Text = kat2Col != null ? getCellText(ws, r, kat2Col) : null
+          const team2 = findTeam(kat2Text, teams)
 
-            const cell = ws[XLSX.utils.encode_cell({ r, c: merge.s.c })]
-            const matchedTeams = findTeams(cell?.v, teams)
-            if (matchedTeams.length === 0) { skipped++; continue }
+          const odCell = ws[XLSX.utils.encode_cell({ r, c: odCol })]
+          const doCell = ws[XLSX.utils.encode_cell({ r, c: doCol })]
+          const startMinute = parseCellTime(odCell)
+          const endMinute   = parseCellTime(doCell)
 
-            for (let c = merge.s.c; c <= merge.e.c; c++) coveredCols.add(c)
-            trainings.push({
-              teamIds: matchedTeams.map((t) => t.id),
-              hallId: hall.id,
-              dayOfWeek,
-              startMinute,
-              endMinute,
-              note: '',
-            })
-          }
+          if (startMinute == null || endMinute == null || endMinute <= startMinute) { skipped++; continue }
 
-          // Process single (non-merged) cells with content
-          for (let c = 2; c <= range.e.c; c++) {
-            if (coveredCols.has(c)) continue
-            const cell = ws[XLSX.utils.encode_cell({ r, c })]
-            if (!cell?.v) continue
-
-            const startMinute = colToMinute[c]
-            const endMinute = colToMinute[c + 1]
-            if (startMinute == null || endMinute == null) continue
-
-            const matchedTeams = findTeams(cell.v, teams)
-            if (matchedTeams.length === 0) continue
-
-            trainings.push({
-              teamIds: matchedTeams.map((t) => t.id),
-              hallId: hall.id,
-              dayOfWeek,
-              startMinute,
-              endMinute,
-              note: '',
-            })
-          }
+          trainings.push({
+            teamIds: [team1.id, ...(team2 ? [team2.id] : [])],
+            hallId: hall.id,
+            dayOfWeek,
+            startMinute,
+            endMinute,
+            note: '',
+          })
         }
 
         resolve({ trainings, skipped })

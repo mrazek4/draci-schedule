@@ -260,6 +260,27 @@
   margin: 16px 0;
 }
 
+.manage-item__code {
+  font-size: 10px;
+  font-weight: 700;
+  font-family: monospace;
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+  padding: 1px 5px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.modal__code-badge {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: monospace;
+  color: var(--color-text);
+  padding: 6px 0;
+  letter-spacing: 1px;
+}
+
 .color-preview {
   width: 28px;
   height: 28px;

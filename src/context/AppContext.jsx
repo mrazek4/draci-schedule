@@ -9,7 +9,7 @@ export function AppProvider({ children }) {
 
   const update = useCallback((patch) => setState((s) => ({ ...s, ...patch })), [setState])
 
-  // Migrate from v6 (trainings[] top-level) to v7 (trainingsBySeason), and fix shortNames
+  // Migrate from v6 (trainings[] top-level) to v7 (trainingsBySeason), fix shortNames, add hall codes
   useEffect(() => {
     setState((s) => {
       let next = s
@@ -25,8 +25,10 @@ export function AppProvider({ children }) {
         }
       }
 
+      const HALL_CODES = { gymnazium: 'GYRI', cercany: 'CER', fialka: 'FIA', 'mestska-hala': 'MSH', 'pet-zs': '5ZS' }
       return {
         ...next,
+        halls: next.halls.map((h) => h.code ? h : { ...h, code: HALL_CODES[h.id] ?? '' }),
         teams: next.teams.map((t) => {
           if (t.id === 'mz-ric' && t.shortName !== 'MLŘ') return { ...t, shortName: 'MLŘ' }
           if (t.id === 'mz-cer' && t.shortName !== 'MLČ') return { ...t, shortName: 'MLČ' }

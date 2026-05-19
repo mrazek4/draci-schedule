@@ -1,9 +1,9 @@
 export const defaultHalls = [
-  { id: 'gymnazium',    name: 'Gymnázium',    color: '#4f6ef7' },
-  { id: 'cercany',      name: 'Čerčany',      color: '#10b981' },
-  { id: 'fialka',       name: 'Fialka',       color: '#ec4899' },
-  { id: 'mestska-hala', name: 'Městská hala', color: '#f59e0b' },
-  { id: 'pet-zs',       name: '5.ZŠ',         color: '#8b5cf6' },
+  { id: 'gymnazium',    name: 'Gymnázium',    color: '#4f6ef7', code: 'GYRI' },
+  { id: 'cercany',      name: 'Čerčany',      color: '#10b981', code: 'CER'  },
+  { id: 'fialka',       name: 'Fialka',       color: '#ec4899', code: 'FIA'  },
+  { id: 'mestska-hala', name: 'Městská hala', color: '#f59e0b', code: 'MSH'  },
+  { id: 'pet-zs',       name: '5.ZŠ',         color: '#8b5cf6', code: '5ZS'  },
 ]
 
 export const defaultHallAvailabilities = [

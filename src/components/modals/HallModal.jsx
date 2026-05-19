@@ -73,11 +73,13 @@ function AvailabilityEditor({ hallId, onClose }) {
 function HallForm({ initial, onSave, onCancel }) {
   const [name, setName]   = useState(initial?.name ?? '')
   const [color, setColor] = useState(initial?.color ?? '#4f6ef7')
+  const [code, setCode]   = useState(initial?.code ?? '')
 
   function handleSubmit(e) {
     e.preventDefault()
     if (!name.trim()) return
-    onSave({ name: name.trim(), color })
+    if (!initial && !code.trim()) return
+    onSave({ name: name.trim(), color, code: code.trim().toUpperCase() })
   }
 
   return (
@@ -86,6 +88,16 @@ function HallForm({ initial, onSave, onCancel }) {
         <div className="modal__field" style={{ flex: 1 }}>
           <label className="modal__label">Název haly</label>
           <input className="modal__input" value={name} onChange={(e) => setName(e.target.value)} placeholder="např. Hala Říčany" required />
+        </div>
+        <div className="modal__field" style={{ width: 70 }}>
+          <label className="modal__label">Kód</label>
+          {initial
+            ? <span className="modal__code-badge">{initial.code || '—'}</span>
+            : <input className="modal__input" value={code} maxLength={6} required
+                style={{ textTransform: 'uppercase' }}
+                onChange={(e) => setCode(e.target.value.toUpperCase())}
+                placeholder="GYRI" />
+          }
         </div>
         <div className="modal__field" style={{ width: 80 }}>
           <label className="modal__label">Barva</label>
@@ -144,6 +156,7 @@ export default function HallModal({ onClose }) {
               <div key={hall.id} className="manage-item">
                 <span className="manage-item__dot" style={{ background: hall.color }} />
                 <span className="manage-item__name">{hall.name}</span>
+                {hall.code && <span className="manage-item__code">{hall.code}</span>}
                 <button className="manage-item__btn" onClick={() => setEditingAvail(hall.id)}>Dostupnost</button>
                 <button className="manage-item__btn" onClick={() => setEditing(hall)}>Upravit</button>
                 <button className="manage-item__btn manage-item__btn--danger" onClick={() => deleteHall(hall.id)}>Smazat</button>
