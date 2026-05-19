@@ -7,7 +7,7 @@ import logo from '../../assets/1629729771_club_logo.webp'
 import './Sidebar.css'
 
 export default function Sidebar({ onManageTeams, onManageHalls, onAddTraining, theme, onToggleTheme, hiddenTeamIds, onToggleTeam, onShowAll, onHideAll }) {
-  const { teams, halls, trainings, seasons, currentSeasonId, setCurrentSeason, addSeason, deleteSeason, setTrainingsForSeason, addHall } = useApp()
+  const { teams, halls, trainings, seasons, currentSeasonId, setCurrentSeason, addSeason, deleteSeason, setTrainingsForSeason, addHall, hallAvailabilities, setHallAvailabilities } = useApp()
   const fileInputRef = useRef(null)
   const [hallMapping, setHallMapping] = useState(null)
 
@@ -24,11 +24,46 @@ export default function Sidebar({ onManageTeams, onManageHalls, onAddTraining, t
     }
   }
 
+  function expandAvailabilitiesForTrainings(importedTrainings) {
+    // Group by hallId → then by dayOfWeek → find min start / max end
+    const byHall = {}
+    for (const t of importedTrainings) {
+      if (!byHall[t.hallId]) byHall[t.hallId] = {}
+      const d = t.dayOfWeek
+      if (!byHall[t.hallId][d]) byHall[t.hallId][d] = { start: t.startMinute, end: t.endMinute }
+      else {
+        byHall[t.hallId][d].start = Math.min(byHall[t.hallId][d].start, t.startMinute)
+        byHall[t.hallId][d].end   = Math.max(byHall[t.hallId][d].end,   t.endMinute)
+      }
+    }
+
+    for (const [hallId, days] of Object.entries(byHall)) {
+      const existing = hallAvailabilities.filter((a) => a.hallId === hallId)
+      let updated = existing.map((a) => ({ ...a }))
+      let changed = false
+
+      for (const [day, { start, end }] of Object.entries(days)) {
+        const dayNum = parseInt(day)
+        const win = updated.find((a) => a.dayOfWeek === dayNum)
+        if (!win) {
+          updated.push({ dayOfWeek: dayNum, startMinute: start, endMinute: end })
+          changed = true
+        } else {
+          if (start < win.startMinute) { win.startMinute = start; changed = true }
+          if (end   > win.endMinute)   { win.endMinute   = end;   changed = true }
+        }
+      }
+
+      if (changed) setHallAvailabilities(hallId, updated)
+    }
+  }
+
   function confirmAndImport(parsedTrainings, skipped) {
     const season = seasons?.find((s) => s.id === currentSeasonId)
     const skipNote = skipped > 0 ? ` (přeskočeno: ${skipped})` : ''
     if (window.confirm(`Nalezeno ${parsedTrainings.length} tréninků${skipNote}.\nNahradit tréninky v sezóně "${season?.name}"?`)) {
       setTrainingsForSeason(currentSeasonId, parsedTrainings.map((t) => ({ ...t, id: crypto.randomUUID() })))
+      expandAvailabilitiesForTrainings(parsedTrainings)
     }
     setHallMapping(null)
   }
