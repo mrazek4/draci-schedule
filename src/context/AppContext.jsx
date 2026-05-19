@@ -1,6 +1,6 @@
 import { createContext, useContext, useCallback, useEffect } from 'react'
 import { useServerStorage } from '../hooks/useServerStorage.js'
-import { defaultState } from '../data/defaults.js'
+import { defaultState, defaultHallAvailabilities } from '../data/defaults.js'
 
 const AppContext = createContext(null)
 
@@ -9,11 +9,11 @@ export function AppProvider({ children }) {
 
   const update = useCallback((patch) => setState((s) => ({ ...s, ...patch })), [setState])
 
-  // Migrate from v6 (trainings[] top-level) to v7 (trainingsBySeason), fix shortNames, add hall codes
   useEffect(() => {
     setState((s) => {
       let next = s
 
+      // v6 → v7: flat trainings[] → trainingsBySeason
       if (s.trainings !== undefined && s.trainingsBySeason === undefined) {
         const seasonId = '2025-2026'
         const { trainings, ...rest } = next
@@ -25,8 +25,9 @@ export function AppProvider({ children }) {
         }
       }
 
+      // Backfill hall codes
       const HALL_CODES = { gymnazium: 'GYRI', cercany: 'CER', fialka: 'FIA', 'mestska-hala': 'MSH', 'pet-zs': '5ZS' }
-      return {
+      next = {
         ...next,
         halls: next.halls.map((h) => h.code ? h : { ...h, code: HALL_CODES[h.id] ?? '' }),
         teams: next.teams.map((t) => {
@@ -35,11 +36,27 @@ export function AppProvider({ children }) {
           return t
         }),
       }
+
+      // Migrate flat hallAvailabilities → availabilitiesBySeason
+      if (next.hallAvailabilities !== undefined && next.availabilitiesBySeason === undefined) {
+        const src = Array.isArray(next.hallAvailabilities) ? next.hallAvailabilities : defaultHallAvailabilities
+        const availabilitiesBySeason = Object.fromEntries(
+          (next.seasons ?? []).map((se) => [
+            se.id,
+            src.map((a) => ({ ...a, id: crypto.randomUUID() })),
+          ])
+        )
+        const { hallAvailabilities, hallAvailReset1, ...rest } = next
+        next = { ...rest, availabilitiesBySeason }
+      }
+
+      return next
     })
   }, [])
 
-  // Computed: current season's trainings
-  const trainings = state.trainingsBySeason?.[state.currentSeasonId] ?? []
+  // Computed: current season's data
+  const trainings          = state.trainingsBySeason?.[state.currentSeasonId] ?? []
+  const hallAvailabilities = state.availabilitiesBySeason?.[state.currentSeasonId] ?? []
 
   // --- Trainings ---
   const addTraining = useCallback((training) => {
@@ -113,27 +130,35 @@ export function AppProvider({ children }) {
   const deleteHall = useCallback((hallId) => {
     setState((s) => {
       const filterTs = (ts) => ts.filter((t) => t.hallId !== hallId)
-      const trainingsBySeason = Object.fromEntries(
-        Object.entries(s.trainingsBySeason ?? {}).map(([id, ts]) => [id, filterTs(ts)])
-      )
+      const filterAvs = (avs) => (avs ?? []).filter((a) => a.hallId !== hallId)
       return {
         ...s,
         halls: s.halls.filter((h) => h.id !== hallId),
-        hallAvailabilities: s.hallAvailabilities.filter((a) => a.hallId !== hallId),
-        trainingsBySeason,
+        trainingsBySeason: Object.fromEntries(
+          Object.entries(s.trainingsBySeason ?? {}).map(([id, ts]) => [id, filterTs(ts)])
+        ),
+        availabilitiesBySeason: Object.fromEntries(
+          Object.entries(s.availabilitiesBySeason ?? {}).map(([id, avs]) => [id, filterAvs(avs)])
+        ),
       }
     })
   }, [setState])
 
-  // --- Hall availabilities ---
+  // --- Hall availabilities (scoped to current season) ---
   const setHallAvailabilities = useCallback((hallId, availabilities) => {
-    setState((s) => ({
-      ...s,
-      hallAvailabilities: [
-        ...s.hallAvailabilities.filter((a) => a.hallId !== hallId),
-        ...availabilities.map((a) => ({ ...a, hallId, id: a.id || crypto.randomUUID() })),
-      ],
-    }))
+    setState((s) => {
+      const cur = s.availabilitiesBySeason?.[s.currentSeasonId] ?? []
+      return {
+        ...s,
+        availabilitiesBySeason: {
+          ...(s.availabilitiesBySeason ?? {}),
+          [s.currentSeasonId]: [
+            ...cur.filter((a) => a.hallId !== hallId),
+            ...availabilities.map((a) => ({ ...a, hallId, id: a.id || crypto.randomUUID() })),
+          ],
+        },
+      }
+    })
   }, [setState])
 
   // --- Teams ---
@@ -153,31 +178,42 @@ export function AppProvider({ children }) {
       const filterTs = (ts) => ts.filter((t) =>
         t.teamIds ? !t.teamIds.includes(teamId) : t.teamId !== teamId
       )
-      const trainingsBySeason = Object.fromEntries(
-        Object.entries(s.trainingsBySeason ?? {}).map(([id, ts]) => [id, filterTs(ts)])
-      )
-      return { ...s, teams: s.teams.filter((t) => t.id !== teamId), trainingsBySeason }
+      return {
+        ...s,
+        teams: s.teams.filter((t) => t.id !== teamId),
+        trainingsBySeason: Object.fromEntries(
+          Object.entries(s.trainingsBySeason ?? {}).map(([id, ts]) => [id, filterTs(ts)])
+        ),
+      }
     })
   }, [setState])
 
   // --- Seasons ---
   const addSeason = useCallback((name) => {
     const id = crypto.randomUUID().slice(0, 8)
-    setState((s) => ({
-      ...s,
-      seasons: [...(s.seasons ?? []), { id, name }],
-      currentSeasonId: id,
-      trainingsBySeason: { ...(s.trainingsBySeason ?? {}), [id]: [] },
-    }))
+    setState((s) => {
+      const curAvails = s.availabilitiesBySeason?.[s.currentSeasonId] ?? []
+      return {
+        ...s,
+        seasons: [...(s.seasons ?? []), { id, name }],
+        currentSeasonId: id,
+        trainingsBySeason: { ...(s.trainingsBySeason ?? {}), [id]: [] },
+        availabilitiesBySeason: {
+          ...(s.availabilitiesBySeason ?? {}),
+          [id]: curAvails.map((a) => ({ ...a, id: crypto.randomUUID() })),
+        },
+      }
+    })
   }, [setState])
 
   const deleteSeason = useCallback((seasonId) => {
     setState((s) => {
       const seasons = (s.seasons ?? []).filter((se) => se.id !== seasonId)
       if (seasons.length === 0) return s
-      const { [seasonId]: _removed, ...rest } = s.trainingsBySeason ?? {}
+      const { [seasonId]: _rt, ...trainingsRest } = s.trainingsBySeason ?? {}
+      const { [seasonId]: _ra, ...availsRest    } = s.availabilitiesBySeason ?? {}
       const currentSeasonId = s.currentSeasonId === seasonId ? seasons[0].id : s.currentSeasonId
-      return { ...s, seasons, currentSeasonId, trainingsBySeason: rest }
+      return { ...s, seasons, currentSeasonId, trainingsBySeason: trainingsRest, availabilitiesBySeason: availsRest }
     })
   }, [setState])
 
@@ -192,11 +228,9 @@ export function AppProvider({ children }) {
     }))
   }, [setState])
 
-  // Like setTrainingsForSeason but also expands hallAvailabilities to cover all imported trainings.
-  // Single atomic setState — no stale-closure issues.
+  // Import: replaces trainings AND sets availability for that season from the data
   const importTrainings = useCallback((seasonId, newTrainings) => {
     setState((s) => {
-      // Group imported trainings by hallId → dayOfWeek → min start / max end
       const byHall = {}
       for (const t of newTrainings) {
         if (!byHall[t.hallId]) byHall[t.hallId] = {}
@@ -207,28 +241,16 @@ export function AppProvider({ children }) {
           byHall[t.hallId][d].end   = Math.max(byHall[t.hallId][d].end,   t.endMinute)
         }
       }
-
-      let avails = [...s.hallAvailabilities]
+      const newAvails = []
       for (const [hallId, days] of Object.entries(byHall)) {
         for (const [day, { start, end }] of Object.entries(days)) {
-          const dayNum = parseInt(day)
-          const idx = avails.findIndex((a) => a.hallId === hallId && a.dayOfWeek === dayNum)
-          if (idx === -1) {
-            avails.push({ id: crypto.randomUUID(), hallId, dayOfWeek: dayNum, startMinute: start, endMinute: end })
-          } else {
-            avails = avails.map((a, i) => i !== idx ? a : {
-              ...a,
-              startMinute: Math.min(a.startMinute, start),
-              endMinute:   Math.max(a.endMinute,   end),
-            })
-          }
+          newAvails.push({ id: crypto.randomUUID(), hallId, dayOfWeek: parseInt(day), startMinute: start, endMinute: end })
         }
       }
-
       return {
         ...s,
         trainingsBySeason: { ...(s.trainingsBySeason ?? {}), [seasonId]: newTrainings },
-        hallAvailabilities: avails,
+        availabilitiesBySeason: { ...(s.availabilitiesBySeason ?? {}), [seasonId]: newAvails },
       }
     })
   }, [setState])
@@ -239,6 +261,7 @@ export function AppProvider({ children }) {
   const value = {
     ...state,
     trainings,
+    hallAvailabilities,
     isLoading,
     addTraining, moveTraining, updateTraining, deleteTraining,
     addHall, updateHall, deleteHall, setHallAvailabilities,

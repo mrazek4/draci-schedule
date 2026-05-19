@@ -48,7 +48,7 @@ const DEFAULT_SEASON_ID = '2025-2026'
 
 export const defaultState = {
   halls: defaultHalls,
-  hallAvailabilities: defaultHallAvailabilities,
+  availabilitiesBySeason: { [DEFAULT_SEASON_ID]: defaultHallAvailabilities },
   teams: defaultTeams,
   seasons: [{ id: DEFAULT_SEASON_ID, name: '2025/2026' }],
   currentSeasonId: DEFAULT_SEASON_ID,
