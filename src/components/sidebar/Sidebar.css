@@ -215,6 +215,38 @@
   opacity: 1;
 }
 
+/* ── user info + logout ── */
+.sidebar__user {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 0 0;
+  border-top: 1px solid var(--color-sidebar-border);
+  margin-top: 2px;
+}
+
+.sidebar__user-name {
+  flex: 1;
+  font-size: 11px;
+  color: var(--color-sidebar-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar__btn--logout {
+  font-size: 11px;
+  padding: 4px 8px;
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+.sidebar__btn--logout:hover {
+  opacity: 1;
+  color: #fca5a5;
+  background: rgba(220, 38, 38, 0.2);
+}
+
 /* ── team tile ── */
 .team-tile {
   display: flex;

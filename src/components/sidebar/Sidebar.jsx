@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { useApp } from '../../context/AppContext.jsx'
+import { useAuth } from '../../auth/AuthProvider.jsx'
 import TeamList from './TeamList.jsx'
 import { exportToExcel } from '../../utils/exportUtils.js'
 import { parseExcelTrainings } from '../../utils/importUtils.js'
@@ -8,6 +9,7 @@ import './Sidebar.css'
 
 export default function Sidebar({ onManageTeams, onManageHalls, onAddTraining, theme, onToggleTheme, hiddenTeamIds, onToggleTeam, onShowAll, onHideAll }) {
   const { teams, halls, trainings, seasons, currentSeasonId, setCurrentSeason, addSeason, deleteSeason, importTrainings, addHall } = useApp()
+  const { user, logout } = useAuth()
   const fileInputRef = useRef(null)
   const [hallMapping, setHallMapping] = useState(null)
 
@@ -130,6 +132,10 @@ export default function Sidebar({ onManageTeams, onManageHalls, onAddTraining, t
           <button className="sidebar__btn sidebar__btn--theme" onClick={onToggleTheme}>
             {theme === 'light' ? '◑ Tmavý režim' : '○ Světlý režim'}
           </button>
+          <div className="sidebar__user">
+            <span className="sidebar__user-name">{user?.name ?? user?.email ?? ''}</span>
+            <button className="sidebar__btn sidebar__btn--logout" onClick={logout}>Odhlásit</button>
+          </div>
         </div>
       </div>
 

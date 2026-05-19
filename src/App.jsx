@@ -9,6 +9,8 @@ import {
 } from '@dnd-kit/core'
 
 import { AppProvider, useApp } from './context/AppContext.jsx'
+import { AuthProvider, useAuth } from './auth/AuthProvider.jsx'
+import LoginPage from './auth/LoginPage.jsx'
 import AppShell from './components/layout/AppShell.jsx'
 import Sidebar from './components/sidebar/Sidebar.jsx'
 import CalendarView from './components/calendar/CalendarView.jsx'
@@ -170,10 +172,28 @@ function AppInner() {
   )
 }
 
-export default function App() {
+function AuthGate() {
+  const { user, loading } = useAuth()
+
+  if (loading) return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0B1F5E' }}>
+      <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14 }}>Přihlašuji…</p>
+    </div>
+  )
+
+  if (!user) return <LoginPage />
+
   return (
     <AppProvider>
       <AppInner />
     </AppProvider>
+  )
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AuthGate />
+    </AuthProvider>
   )
 }
