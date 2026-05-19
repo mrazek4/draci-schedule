@@ -84,7 +84,10 @@ export default function Sidebar({ onManageTeams, onManageHalls, onAddTraining, t
         <button className="sidebar__btn" onClick={onManageHalls}>
           <span>🏟</span> Správa hal
         </button>
-        <button className="sidebar__btn" onClick={() => exportToExcel(trainings, teams, halls)}>
+        <button className="sidebar__btn" onClick={async () => {
+          try { await exportToExcel(trainings, teams, halls) }
+          catch (err) { alert('Chyba při exportu: ' + err.message) }
+        }}>
           ↓ Export .xlsx
         </button>
         <button className="sidebar__btn" onClick={() => fileInputRef.current?.click()}>

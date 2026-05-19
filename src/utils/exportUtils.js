@@ -1,5 +1,3 @@
-import * as XLSX from 'xlsx'
-
 const DAY_NAMES = ['PO', 'ÚT', 'ST', 'ČT', 'PÁ', 'SO', 'NE']
 
 function minutesToTimeStr(minutes) {
@@ -8,24 +6,44 @@ function minutesToTimeStr(minutes) {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
 }
 
-export function exportToExcel(trainings, teams, halls) {
+function hexToArgb(hex) {
+  return 'FF' + hex.replace('#', '').toUpperCase()
+}
+
+function textArgbForBg(hexColor) {
+  const r = parseInt(hexColor.slice(1, 3), 16)
+  const g = parseInt(hexColor.slice(3, 5), 16)
+  const b = parseInt(hexColor.slice(5, 7), 16)
+  const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+  return lum > 0.55 ? 'FF000000' : 'FFFFFFFF'
+}
+
+function border(top = 'thin', left = 'thin', bottom = 'thin', right = 'thin') {
+  return { top: { style: top }, left: { style: left }, bottom: { style: bottom }, right: { style: right } }
+}
+
+export async function exportToExcel(trainings, teams, halls) {
   if (!trainings || trainings.length === 0) {
     alert('Žádné tréninky k exportu.')
     return
   }
 
+  const { default: ExcelJS } = await import('exceljs')
+
   const minMinute = Math.floor(Math.min(...trainings.map((t) => t.startMinute)) / 15) * 15
   const maxMinute = Math.ceil(Math.max(...trainings.map((t) => t.endMinute)) / 15) * 15
 
-  // Build time slots (15-min steps), last slot is phantom (for endMinute boundary)
+  // 15-min time slots from min to max (inclusive — last slot is just a header label)
   const timeSlots = []
   for (let m = minMinute; m <= maxMinute; m += 15) timeSlots.push(m)
 
-  // col = index in timeSlots + 2 (offset for Den, Místo/Čas columns)
-  const minuteToCol = {}
-  timeSlots.forEach((m, i) => { minuteToCol[m] = i + 2 })
+  const minuteToIdx = {}
+  timeSlots.forEach((m, i) => { minuteToIdx[m] = i })
 
-  // Collect (dayOfWeek, hallId) pairs that have trainings, sorted by day then hall order
+  // Worksheet col for a given slot index (cols 1,2 = Den, Hala)
+  const tCol = (idx) => idx + 3
+
+  // Collect (dayOfWeek, hallId) pairs with trainings, sorted day-first
   const pairs = []
   const seen = new Set()
   for (let day = 0; day <= 6; day++) {
@@ -38,47 +56,104 @@ export function exportToExcel(trainings, teams, halls) {
     }
   }
 
-  const ws = {}
-  const merges = []
+  const wb = new ExcelJS.Workbook()
+  wb.creator = 'FBC Draci Říčany'
+  const ws = wb.addWorksheet('Rozvrh tréninků')
 
-  // Header row (row 0): Den | Místo/Čas | 16:00 | 16:15 | ...
-  ws[XLSX.utils.encode_cell({ r: 0, c: 0 })] = { v: 'Den', t: 's' }
-  ws[XLSX.utils.encode_cell({ r: 0, c: 1 })] = { v: 'Místo/Čas', t: 's' }
-  timeSlots.forEach((m, i) => {
-    ws[XLSX.utils.encode_cell({ r: 0, c: i + 2 })] = { v: minutesToTimeStr(m), t: 's' }
+  // Freeze first row + first two columns
+  ws.views = [{ state: 'frozen', xSplit: 2, ySplit: 1 }]
+
+  // Column widths
+  ws.getColumn(1).width = 6
+  ws.getColumn(2).width = 17
+  timeSlots.forEach((_, i) => { ws.getColumn(i + 3).width = 7.5 })
+
+  const HEADER_FILL = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9E1F2' } }
+  const CENTER = { vertical: 'middle', horizontal: 'center' }
+  const LEFT   = { vertical: 'middle', horizontal: 'left' }
+
+  // ── Row 1: header ─────────────────────────────────────────────────────────
+  const hRow = ws.addRow(['Den', 'Místo/čas', ...timeSlots.map(minutesToTimeStr)])
+  hRow.height = 18
+  hRow.eachCell((cell, col) => {
+    cell.font      = { bold: true, size: 9 }
+    cell.alignment = CENTER
+    cell.fill      = HEADER_FILL
+    const isHour   = col >= 3 && timeSlots[col - 3] % 60 === 0
+    cell.border    = border(
+      'medium',
+      col === 1 ? 'medium' : isHour ? 'medium' : 'thin',
+      'medium',
+      col === 2 ? 'medium' : 'thin',
+    )
   })
 
-  // Data rows
-  pairs.forEach(({ dayOfWeek, hallId }, idx) => {
-    const r = idx + 1
+  // ── Data rows ──────────────────────────────────────────────────────────────
+  let prevDay = -1
+  for (const { dayOfWeek, hallId } of pairs) {
+    const isNewDay = dayOfWeek !== prevDay
+    prevDay = dayOfWeek
+
     const hall = halls.find((h) => h.id === hallId)
-    ws[XLSX.utils.encode_cell({ r, c: 0 })] = { v: DAY_NAMES[dayOfWeek], t: 's' }
-    ws[XLSX.utils.encode_cell({ r, c: 1 })] = { v: hall?.name ?? hallId, t: 's' }
+    const row  = ws.addRow([DAY_NAMES[dayOfWeek], hall?.name ?? hallId, ...Array(timeSlots.length).fill(null)])
+    row.height = 21
+    const r = row.number
 
-    const rowTrainings = trainings.filter((t) => t.dayOfWeek === dayOfWeek && t.hallId === hallId)
-    for (const training of rowTrainings) {
-      const teamIdArr = training.teamIds ?? (training.teamId ? [training.teamId] : [])
-      const label = teamIdArr
-        .map((id) => teams.find((t) => t.id === id)?.shortName ?? id)
-        .join(' + ')
+    // Den
+    const denCell = row.getCell(1)
+    denCell.font      = { bold: true, size: 9 }
+    denCell.alignment = CENTER
+    denCell.border    = border(isNewDay ? 'medium' : 'thin', 'medium', 'thin', 'thin')
 
-      const startCol = minuteToCol[training.startMinute]
-      const endColExclusive = minuteToCol[training.endMinute]
-      if (startCol == null || endColExclusive == null) continue
+    // Hala
+    const halaCell = row.getCell(2)
+    halaCell.font      = { bold: true, size: 9 }
+    halaCell.alignment = LEFT
+    halaCell.border    = border(isNewDay ? 'medium' : 'thin', 'thin', 'thin', 'medium')
 
-      const endCol = endColExclusive - 1
-      ws[XLSX.utils.encode_cell({ r, c: startCol })] = { v: label, t: 's' }
-      if (endCol > startCol) merges.push({ s: { r, c: startCol }, e: { r, c: endCol } })
+    // All time cells — default empty borders
+    timeSlots.forEach((minute, idx) => {
+      const isHour = minute % 60 === 0
+      row.getCell(tCol(idx)).border = border(
+        isNewDay ? 'medium' : 'thin',
+        isHour ? 'medium' : 'thin',
+        'thin',
+        'thin',
+      )
+    })
+
+    // Training blocks
+    const rowTr = trainings.filter((t) => t.dayOfWeek === dayOfWeek && t.hallId === hallId)
+    for (const tr of rowTr) {
+      const teamIds = tr.teamIds ?? (tr.teamId ? [tr.teamId] : [])
+      const label   = teamIds.map((id) => teams.find((t) => t.id === id)?.shortName ?? id).join(' + ')
+      const bgHex   = teams.find((t) => t.id === teamIds[0])?.color ?? '#94a3b8'
+
+      const si = minuteToIdx[tr.startMinute]
+      const ei = minuteToIdx[tr.endMinute]      // exclusive
+      if (si == null || ei == null || ei <= si) continue
+
+      const sc = tCol(si)
+      const ec = tCol(ei) - 1                   // inclusive end col
+      if (ec > sc) ws.mergeCells(r, sc, r, ec)
+
+      const cell      = ws.getCell(r, sc)
+      cell.value      = label
+      cell.font       = { bold: true, size: 9, color: { argb: textArgbForBg(bgHex) } }
+      cell.alignment  = CENTER
+      cell.fill       = { type: 'pattern', pattern: 'solid', fgColor: { argb: hexToArgb(bgHex) } }
+      const isHour    = timeSlots[si] % 60 === 0
+      cell.border     = border(isNewDay ? 'medium' : 'thin', isHour ? 'medium' : 'thin', 'thin', 'thin')
     }
-  })
+  }
 
-  const lastRow = pairs.length
-  const lastCol = timeSlots.length + 1
-  ws['!ref'] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: lastRow, c: lastCol } })
-  ws['!merges'] = merges
-  ws['!cols'] = [{ wch: 4 }, { wch: 14 }, ...timeSlots.map(() => ({ wch: 6 }))]
-
-  const wb = XLSX.utils.book_new()
-  XLSX.utils.book_append_sheet(wb, ws, 'Rozvrh')
-  XLSX.writeFile(wb, 'treninky.xlsx')
+  // Download
+  const buffer = await wb.xlsx.writeBuffer()
+  const blob   = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+  const url    = URL.createObjectURL(blob)
+  const a      = Object.assign(document.createElement('a'), { href: url, download: 'treninky.xlsx' })
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
 }
