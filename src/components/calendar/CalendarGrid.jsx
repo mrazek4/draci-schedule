@@ -126,7 +126,8 @@ export default function CalendarGrid({ onTrainingClick, onSlotClick, hiddenTeamI
               className="gh-hall-label"
               style={{ gridColumn: 2, gridRow: gridRow(ri), background: bg, borderLeftColor: row.hall.color }}
             >
-              {row.hall.name}
+              {row.hall.code && <span className="gh-hall-code">{row.hall.code}</span>}
+              <span className="gh-hall-label__name">{row.hall.name}</span>
             </div>,
             ...timeSlots.map((minute) => {
               const available = isWithinAvailability(

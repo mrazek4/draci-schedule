@@ -173,6 +173,7 @@
   grid-column: 2;
   display: flex;
   align-items: center;
+  gap: 6px;
   padding: 0 10px;
   font-size: 12px;
   font-weight: 600;
@@ -183,9 +184,24 @@
   position: sticky;
   left: 60px;
   z-index: 8;
-  white-space: nowrap;
+  overflow: hidden;
+}
+
+.gh-hall-code {
+  font-size: 10px;
+  font-weight: 700;
+  font-family: monospace;
+  color: var(--color-text-muted);
+  background: var(--color-surface-2);
+  padding: 1px 4px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.gh-hall-label__name {
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* ── time slot cells ── */
