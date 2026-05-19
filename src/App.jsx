@@ -19,7 +19,7 @@ import { minutesToTime, SLOT_MINUTES } from './utils/timeUtils.js'
 import { isWithinAvailability } from './utils/calendarUtils.js'
 
 function AppInner() {
-  const { teams, halls, hallAvailabilities, trainings, addTraining, moveTraining } = useApp()
+  const { teams, halls, hallAvailabilities, trainings, addTraining, moveTraining, isLoading } = useApp()
 
   const [activeItem, setActiveItem]         = useState(null)
   const [trainingModal, setTrainingModal]   = useState(null)
@@ -154,6 +154,12 @@ function AppInner() {
       </AppShell>
 
       <DragOverlay>{overlayContent}</DragOverlay>
+      {isLoading && (
+        <div style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center',
+          justifyContent: 'center', background: 'var(--color-bg)', zIndex: 100 }}>
+          <p style={{ color: 'var(--color-text-muted)', fontSize: 14 }}>Načítám data…</p>
+        </div>
+      )}
       {toast && <div className="toast">{toast}</div>}
 
       {showAddModal !== null && <TrainingModal prefill={showAddModal} onClose={() => setShowAddModal(null)} />}

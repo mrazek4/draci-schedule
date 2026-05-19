@@ -1,11 +1,11 @@
 import { createContext, useContext, useCallback, useEffect } from 'react'
-import { useLocalStorage } from '../hooks/useLocalStorage.js'
+import { useServerStorage } from '../hooks/useServerStorage.js'
 import { defaultState } from '../data/defaults.js'
 
 const AppContext = createContext(null)
 
 export function AppProvider({ children }) {
-  const [state, setState] = useLocalStorage('draci-schedule-v6', defaultState)
+  const [state, setState, isLoading] = useServerStorage('draci-schedule-v6', defaultState)
 
   const update = useCallback((patch) => setState((s) => ({ ...s, ...patch })), [setState])
 
@@ -108,6 +108,7 @@ export function AppProvider({ children }) {
 
   const value = {
     ...state,
+    isLoading,
     addTraining, moveTraining, updateTraining, deleteTraining,
     addHall, updateHall, deleteHall, setHallAvailabilities,
     addTeam, updateTeam, deleteTeam,
