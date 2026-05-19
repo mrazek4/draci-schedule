@@ -33,12 +33,14 @@ export async function exportToExcel(trainings, teams, halls) {
   const minMinute = Math.floor(Math.min(...trainings.map((t) => t.startMinute)) / 15) * 15
   const maxMinute = Math.ceil(Math.max(...trainings.map((t) => t.endMinute)) / 15) * 15
 
-  // 15-min time slots from min to max (inclusive — last slot is just a header label)
+  // 15-min time slots: header columns go from minMinute up to (but not including) maxMinute,
+  // so the last training block extends to the right edge of the table.
   const timeSlots = []
-  for (let m = minMinute; m <= maxMinute; m += 15) timeSlots.push(m)
+  for (let m = minMinute; m < maxMinute; m += 15) timeSlots.push(m)
 
   const minuteToIdx = {}
   timeSlots.forEach((m, i) => { minuteToIdx[m] = i })
+  minuteToIdx[maxMinute] = timeSlots.length  // boundary for endMinute calculation
 
   // Worksheet col for a given slot index (cols 1,2 = Den, Hala)
   const tCol = (idx) => idx + 3
