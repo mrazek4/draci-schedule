@@ -1,15 +1,18 @@
 import { useRef, useState } from 'react'
 import { useApp } from '../../context/AppContext.jsx'
 import { useAuth } from '../../auth/AuthProvider.jsx'
+import { useRole, useCanEdit } from '../../auth/useRole.js'
 import TeamList from './TeamList.jsx'
 import { exportToExcel } from '../../utils/exportUtils.js'
 import { parseExcelTrainings } from '../../utils/importUtils.js'
 import logo from '../../assets/1629729771_club_logo.webp'
 import './Sidebar.css'
 
-export default function Sidebar({ onManageTeams, onManageHalls, onAddTraining, theme, onToggleTheme, hiddenTeamIds, onToggleTeam, onShowAll, onHideAll }) {
+export default function Sidebar({ onManageTeams, onManageHalls, onManageUsers, onAddTraining, theme, onToggleTheme, hiddenTeamIds, onToggleTeam, onShowAll, onHideAll }) {
   const { teams, halls, trainings, seasons, currentSeasonId, setCurrentSeason, addSeason, deleteSeason, importTrainings, addHall } = useApp()
   const { user, logout } = useAuth()
+  const canEdit = useCanEdit()
+  const role    = useRole()
   const fileInputRef = useRef(null)
   const [hallMapping, setHallMapping] = useState(null)
 
@@ -94,8 +97,8 @@ export default function Sidebar({ onManageTeams, onManageHalls, onAddTraining, t
               <option key={s.id} value={s.id}>{s.name}</option>
             ))}
           </select>
-          <button className="sidebar__season-btn" onClick={handleAddSeason} title="Přidat sezónu">+</button>
-          <button className="sidebar__season-btn sidebar__season-btn--del" onClick={handleDeleteSeason} title="Smazat sezónu" disabled={(seasons?.length ?? 0) <= 1}>✕</button>
+          {canEdit && <button className="sidebar__season-btn" onClick={handleAddSeason} title="Přidat sezónu">+</button>}
+          {canEdit && <button className="sidebar__season-btn sidebar__season-btn--del" onClick={handleDeleteSeason} title="Smazat sezónu" disabled={(seasons?.length ?? 0) <= 1}>✕</button>}
         </div>
 
         <div className="sidebar__section-header">
@@ -110,25 +113,38 @@ export default function Sidebar({ onManageTeams, onManageHalls, onAddTraining, t
         </div>
 
         <div className="sidebar__actions">
-          <button className="sidebar__btn sidebar__btn--accent" onClick={onAddTraining}>
-            + Přidat trénink
-          </button>
-          <button className="sidebar__btn" onClick={onManageTeams}>
-            <span>⚙</span> Správa týmů
-          </button>
-          <button className="sidebar__btn" onClick={onManageHalls}>
-            <span>🏟</span> Správa hal
-          </button>
+          {canEdit && (
+            <button className="sidebar__btn sidebar__btn--accent" onClick={onAddTraining}>
+              + Přidat trénink
+            </button>
+          )}
+          {canEdit && (
+            <button className="sidebar__btn" onClick={onManageTeams}>
+              <span>⚙</span> Správa týmů
+            </button>
+          )}
+          {canEdit && (
+            <button className="sidebar__btn" onClick={onManageHalls}>
+              <span>🏟</span> Správa hal
+            </button>
+          )}
+          {role === 'admin' && (
+            <button className="sidebar__btn" onClick={onManageUsers}>
+              <span>👥</span> Správa uživatelů
+            </button>
+          )}
           <button className="sidebar__btn" onClick={async () => {
             try { await exportToExcel(trainings, teams, halls) }
             catch (err) { alert('Chyba při exportu: ' + err.message) }
           }}>
             ↓ Export .xlsx
           </button>
-          <button className="sidebar__btn" onClick={() => fileInputRef.current?.click()}>
-            ↑ Import .xlsx
-          </button>
-          <input ref={fileInputRef} type="file" accept=".xlsx,.xls" style={{ display: 'none' }} onChange={handleImport} />
+          {canEdit && (
+            <button className="sidebar__btn" onClick={() => fileInputRef.current?.click()}>
+              ↑ Import .xlsx
+            </button>
+          )}
+          {canEdit && <input ref={fileInputRef} type="file" accept=".xlsx,.xls" style={{ display: 'none' }} onChange={handleImport} />}
           <button className="sidebar__btn sidebar__btn--theme" onClick={onToggleTheme}>
             {theme === 'light' ? '◑ Tmavý režim' : '○ Světlý režim'}
           </button>

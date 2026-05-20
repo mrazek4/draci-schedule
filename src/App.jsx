@@ -10,6 +10,7 @@ import {
 
 import { AppProvider, useApp } from './context/AppContext.jsx'
 import { AuthProvider, useAuth } from './auth/AuthProvider.jsx'
+import { useCanEdit } from './auth/useRole.js'
 import LoginPage from './auth/LoginPage.jsx'
 import AppShell from './components/layout/AppShell.jsx'
 import Sidebar from './components/sidebar/Sidebar.jsx'
@@ -17,6 +18,7 @@ import CalendarView from './components/calendar/CalendarView.jsx'
 import TrainingModal from './components/modals/TrainingModal.jsx'
 import TeamModal from './components/modals/TeamModal.jsx'
 import HallModal from './components/modals/HallModal.jsx'
+import UserModal from './components/modals/UserModal.jsx'
 import { minutesToTime, SLOT_MINUTES } from './utils/timeUtils.js'
 import { isWithinAvailability } from './utils/calendarUtils.js'
 
@@ -28,9 +30,11 @@ function AppInner() {
   const [showAddModal, setShowAddModal]     = useState(null)
   const [showTeamModal, setShowTeamModal]   = useState(false)
   const [showHallModal, setShowHallModal]   = useState(false)
+  const [showUserModal, setShowUserModal]   = useState(false)
   const [toast, setToast]                   = useState(null)
   const [theme, setTheme]                   = useState(() => localStorage.getItem('theme') || 'light')
   const [hiddenTeamIds, setHiddenTeamIds]   = useState([])
+  const canEdit = useCanEdit()
 
   function toggleTeamVisibility(teamId) {
     setHiddenTeamIds((prev) =>
@@ -60,7 +64,7 @@ function AppInner() {
 
   function handleDragEnd({ active, over }) {
     setActiveItem(null)
-    if (!over) return
+    if (!canEdit || !over) return
 
     const slot = over.data.current
     if (!slot?.available) return
@@ -142,6 +146,7 @@ function AppInner() {
           <Sidebar
             onManageTeams={() => setShowTeamModal(true)}
             onManageHalls={() => setShowHallModal(true)}
+            onManageUsers={() => setShowUserModal(true)}
             onAddTraining={() => setShowAddModal({})}
             theme={theme}
             onToggleTheme={toggleTheme}
@@ -152,7 +157,7 @@ function AppInner() {
           />
         }
       >
-        <CalendarView onTrainingClick={setTrainingModal} onSlotClick={(prefill) => setShowAddModal(prefill)} hiddenTeamIds={hiddenTeamIds} />
+        <CalendarView onTrainingClick={setTrainingModal} onSlotClick={canEdit ? (prefill) => setShowAddModal(prefill) : null} hiddenTeamIds={hiddenTeamIds} />
       </AppShell>
 
       <DragOverlay>{overlayContent}</DragOverlay>
@@ -168,6 +173,7 @@ function AppInner() {
       {trainingModal  && <TrainingModal training={trainingModal} onClose={() => setTrainingModal(null)} onCopy={(prefill) => { setTrainingModal(null); setShowAddModal(prefill) }} />}
       {showTeamModal  && <TeamModal onClose={() => setShowTeamModal(false)} />}
       {showHallModal  && <HallModal onClose={() => setShowHallModal(false)} />}
+      {showUserModal  && <UserModal onClose={() => setShowUserModal(false)} />}
     </DndContext>
   )
 }

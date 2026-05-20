@@ -1,10 +1,13 @@
 import { useDraggable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
+import { useCanEdit } from '../../auth/useRole.js'
 
 export default function TeamTile({ team, isVisible = true, onToggle }) {
+  const canEdit = useCanEdit()
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: `team-${team.id}`,
     data: { type: 'NEW_TRAINING', teamId: team.id },
+    disabled: !canEdit,
   })
 
   return (

@@ -37,6 +37,11 @@ export function AppProvider({ children }) {
         }),
       }
 
+      // Migrate missing userRoles
+      if (next.userRoles === undefined) {
+        next = { ...next, userRoles: defaultState.userRoles }
+      }
+
       // Migrate flat hallAvailabilities → availabilitiesBySeason
       if (next.hallAvailabilities !== undefined && next.availabilitiesBySeason === undefined) {
         const src = Array.isArray(next.hallAvailabilities) ? next.hallAvailabilities : defaultHallAvailabilities
@@ -255,6 +260,18 @@ export function AppProvider({ children }) {
     })
   }, [setState])
 
+  // --- User roles ---
+  const setUserRole = useCallback((email, role) => {
+    setState((s) => ({ ...s, userRoles: { ...(s.userRoles ?? {}), [email]: role } }))
+  }, [setState])
+
+  const removeUserRole = useCallback((email) => {
+    setState((s) => {
+      const { [email]: _, ...rest } = s.userRoles ?? {}
+      return { ...s, userRoles: rest }
+    })
+  }, [setState])
+
   // --- Week navigation ---
   const setWeekOffset = useCallback((offset) => update({ weekOffset: offset }), [update])
 
@@ -267,6 +284,7 @@ export function AppProvider({ children }) {
     addHall, updateHall, deleteHall, setHallAvailabilities,
     addTeam, updateTeam, deleteTeam,
     addSeason, deleteSeason, setCurrentSeason, setTrainingsForSeason, importTrainings,
+    setUserRole, removeUserRole,
     setWeekOffset,
   }
 

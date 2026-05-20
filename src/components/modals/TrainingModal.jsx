@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useApp } from '../../context/AppContext.jsx'
+import { useCanEdit } from '../../auth/useRole.js'
 import { minutesToTime, timeToMinutes } from '../../utils/timeUtils.js'
 import { isWithinAvailability } from '../../utils/calendarUtils.js'
 import './Modal.css'
@@ -8,6 +9,7 @@ const DAY_NAMES = ['Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek']
 
 export default function TrainingModal({ training, prefill = {}, onClose, onCopy }) {
   const { teams, halls, hallAvailabilities, addTraining, updateTraining, deleteTraining } = useApp()
+  const canEdit  = useCanEdit()
   const isCreate = !training
 
   const initialTeamIds = training
@@ -151,8 +153,8 @@ export default function TrainingModal({ training, prefill = {}, onClose, onCopy 
 
         {error && <p style={{ color: 'var(--color-danger)', fontSize: 12, marginBottom: 4 }}>{error}</p>}
 
-        <div className={`modal__actions${!isCreate ? ' modal__actions--spread' : ''}`}>
-          {!isCreate && (
+        <div className={`modal__actions${!isCreate && canEdit ? ' modal__actions--spread' : ''}`}>
+          {canEdit && !isCreate && (
             <div style={{ display: 'flex', gap: 8 }}>
               <button className="btn btn--danger" onClick={handleDelete}>Smazat</button>
               <button className="btn btn--ghost" onClick={() => onCopy?.({
@@ -166,10 +168,12 @@ export default function TrainingModal({ training, prefill = {}, onClose, onCopy 
             </div>
           )}
           <div style={{ display: 'flex', gap: 8 }}>
-            <button className="btn btn--ghost" onClick={onClose}>Zrušit</button>
-            <button className="btn btn--primary" onClick={handleSave}>
-              {isCreate ? 'Přidat' : 'Uložit'}
-            </button>
+            <button className="btn btn--ghost" onClick={onClose}>Zavřít</button>
+            {canEdit && (
+              <button className="btn btn--primary" onClick={handleSave}>
+                {isCreate ? 'Přidat' : 'Uložit'}
+              </button>
+            )}
           </div>
         </div>
       </div>

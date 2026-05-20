@@ -2,9 +2,11 @@ import { useDraggable } from '@dnd-kit/core'
 import { minutesToTime } from '../../utils/timeUtils.js'
 import { hasConflict } from '../../utils/calendarUtils.js'
 import { useApp } from '../../context/AppContext.jsx'
+import { useCanEdit } from '../../auth/useRole.js'
 
 export default function TrainingBlock({ training, onClick }) {
   const { teams, trainings } = useApp()
+  const canEdit = useCanEdit()
 
   const teamIds = training.teamIds ?? (training.teamId ? [training.teamId] : [])
   const primaryTeam = teams.find((t) => t.id === teamIds[0])
@@ -13,6 +15,7 @@ export default function TrainingBlock({ training, onClick }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `training-${training.id}`,
     data: { type: 'MOVE_TRAINING', trainingId: training.id },
+    disabled: !canEdit,
   })
 
   const conflict = hasConflict(trainings, training)
