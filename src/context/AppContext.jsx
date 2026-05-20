@@ -37,9 +37,16 @@ export function AppProvider({ children }) {
         }),
       }
 
-      // Migrate missing userRoles
+      // Migrate missing userRoles + bootstrap admin from env var
       if (next.userRoles === undefined) {
         next = { ...next, userRoles: defaultState.userRoles }
+      } else {
+        const bootstrapEntries = Object.entries(defaultState.userRoles ?? {})
+        for (const [email, role] of bootstrapEntries) {
+          if (!(next.userRoles ?? {})[email]) {
+            next = { ...next, userRoles: { ...(next.userRoles ?? {}), [email]: role } }
+          }
+        }
       }
 
       // Migrate flat hallAvailabilities → availabilitiesBySeason
