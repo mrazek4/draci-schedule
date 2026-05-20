@@ -45,7 +45,7 @@ export default function UserModal({ onClose }) {
                 onChange={(e) => setUserRole(email, e.target.value)}
               >
                 <option value="admin">Admin</option>
-                <option value="vybor">Výkonný výbor</option>
+                <option value="vybor">Editor</option>
               </select>
               <button
                 className="manage-item__btn manage-item__btn--danger"
@@ -77,7 +77,7 @@ export default function UserModal({ onClose }) {
             <label className="modal__label">Role</label>
             <select className="modal__select" value={newRole} onChange={(e) => setNewRole(e.target.value)}>
               <option value="admin">Admin</option>
-              <option value="vybor">Výkonný výbor</option>
+              <option value="vybor">Editor</option>
             </select>
           </div>
           <button type="submit" className="btn btn--primary" style={{ flexShrink: 0, alignSelf: 'flex-end' }}>

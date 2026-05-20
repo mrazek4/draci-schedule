@@ -8,7 +8,6 @@ export default function CalendarView({ onTrainingClick, onSlotClick, hiddenTeamI
           <div className="calendar-header__title">Rozvrh tréninků</div>
           <div className="calendar-header__sub">FBC Draci Říčany</div>
         </div>
-        <span className="calendar-header__badge">Admin plánování</span>
       </div>
       <CalendarGrid onTrainingClick={onTrainingClick} onSlotClick={onSlotClick} hiddenTeamIds={hiddenTeamIds} />
     </div>
