@@ -5,6 +5,8 @@ export function useRole() {
   const { user } = useAuth()
   const { userRoles } = useApp()
   if (!user) return 'none'
+  const hasAnyAdmin = Object.values(userRoles ?? {}).some((r) => r === 'admin')
+  if (!hasAnyAdmin) return 'admin'
   return userRoles?.[user.email] ?? 'trener'
 }
 

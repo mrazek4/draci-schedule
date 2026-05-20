@@ -44,8 +44,7 @@ export const defaultTeams = [
   { id: 'brankari', name: 'Brankáři',              shortName: 'BR',  color: '#4a5568' },
 ]
 
-const DEFAULT_SEASON_ID     = '2025-2026'
-const BOOTSTRAP_ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || ''
+const DEFAULT_SEASON_ID = '2025-2026'
 
 export const defaultState = {
   halls: defaultHalls,
@@ -55,5 +54,5 @@ export const defaultState = {
   currentSeasonId: DEFAULT_SEASON_ID,
   trainingsBySeason: { [DEFAULT_SEASON_ID]: [] },
   weekOffset: 0,
-  userRoles: BOOTSTRAP_ADMIN_EMAIL ? { [BOOTSTRAP_ADMIN_EMAIL]: 'admin' } : {},
+  userRoles: {},
 }
