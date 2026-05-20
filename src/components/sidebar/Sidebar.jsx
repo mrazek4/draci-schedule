@@ -149,7 +149,7 @@ export default function Sidebar({ onManageTeams, onManageHalls, onManageUsers, o
             {theme === 'light' ? '◑ Tmavý režim' : '○ Světlý režim'}
           </button>
           <div className="sidebar__user">
-            <span className="sidebar__user-name" title={user?.email}>{user?.name ?? user?.email ?? ''} · {user?.email}</span>
+            <span className="sidebar__user-name">{user?.name ?? user?.email ?? ''}</span>
             <button className="sidebar__btn sidebar__btn--logout" onClick={logout}>Odhlásit</button>
           </div>
         </div>
