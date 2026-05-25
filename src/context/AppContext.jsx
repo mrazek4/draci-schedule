@@ -30,11 +30,11 @@ export function AppProvider({ children }) {
       next = {
         ...next,
         halls: next.halls.map((h) => h.code ? h : { ...h, code: HALL_CODES[h.id] ?? '' }),
-        teams: next.teams.map((t) => {
+        ...(next.teams ? { teams: next.teams.map((t) => {
           if (t.id === 'mz-ric' && t.shortName !== 'MLŘ') return { ...t, shortName: 'MLŘ' }
           if (t.id === 'mz-cer' && t.shortName !== 'MLČ') return { ...t, shortName: 'MLČ' }
           return t
-        }),
+        }) } : {}),
       }
 
       // Migrate flat teams[] → teamsBySeason
