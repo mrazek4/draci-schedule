@@ -3,6 +3,7 @@ import { useApp } from '../../context/AppContext.jsx'
 import { useAuth } from '../../auth/AuthProvider.jsx'
 import { useRole, useCanEdit } from '../../auth/useRole.js'
 import TeamList from './TeamList.jsx'
+import SeasonModal from '../modals/SeasonModal.jsx'
 import { exportToExcel } from '../../utils/exportUtils.js'
 import { parseExcelTrainings } from '../../utils/importUtils.js'
 import logo from '../../assets/1629729771_club_logo.webp'
@@ -15,11 +16,7 @@ export default function Sidebar({ onManageTeams, onManageHalls, onManageUsers, o
   const role    = useRole()
   const fileInputRef = useRef(null)
   const [hallMapping, setHallMapping] = useState(null)
-
-  function handleAddSeason() {
-    const name = prompt('Název sezóny (např. 2026/2027)')
-    if (name?.trim()) addSeason(name.trim())
-  }
+  const [showSeasonModal, setShowSeasonModal] = useState(false)
 
   function handleDeleteSeason() {
     if ((seasons?.length ?? 0) <= 1) { alert('Nelze smazat poslední sezónu.'); return }
@@ -97,7 +94,7 @@ export default function Sidebar({ onManageTeams, onManageHalls, onManageUsers, o
               <option key={s.id} value={s.id}>{s.name}</option>
             ))}
           </select>
-          {canEdit && <button className="sidebar__season-btn" onClick={handleAddSeason} title="Přidat sezónu">+</button>}
+          {canEdit && <button className="sidebar__season-btn" onClick={() => setShowSeasonModal(true)} title="Přidat sezónu">+</button>}
           {canEdit && <button className="sidebar__season-btn sidebar__season-btn--del" onClick={handleDeleteSeason} title="Smazat sezónu" disabled={(seasons?.length ?? 0) <= 1}>✕</button>}
         </div>
 
@@ -154,6 +151,16 @@ export default function Sidebar({ onManageTeams, onManageHalls, onManageUsers, o
           </div>
         </div>
       </div>
+
+      {showSeasonModal && (
+        <SeasonModal
+          onClose={() => setShowSeasonModal(false)}
+          onAdd={({ name, copyAvailabilities, copyTeams }) => {
+            addSeason(name, { copyAvailabilities, copyTeams })
+            setShowSeasonModal(false)
+          }}
+        />
+      )}
 
       {hallMapping && (
         <div className="modal-backdrop" onClick={() => setHallMapping(null)}>

@@ -37,6 +37,16 @@ export function AppProvider({ children }) {
         }),
       }
 
+      // Migrate flat teams[] → teamsBySeason
+      if (next.teamsBySeason === undefined) {
+        const globalTeams = next.teams ?? defaultState.teamsBySeason[defaultState.currentSeasonId]
+        const teamsBySeason = Object.fromEntries(
+          (next.seasons ?? []).map((se) => [se.id, globalTeams])
+        )
+        const { teams: _t, ...restNoTeams } = next
+        next = { ...restNoTeams, teamsBySeason }
+      }
+
       // Migrate missing userRoles + bootstrap admin from env var
       if (next.userRoles === undefined) {
         next = { ...next, userRoles: defaultState.userRoles }
@@ -69,6 +79,7 @@ export function AppProvider({ children }) {
   // Computed: current season's data
   const trainings          = state.trainingsBySeason?.[state.currentSeasonId] ?? []
   const hallAvailabilities = state.availabilitiesBySeason?.[state.currentSeasonId] ?? []
+  const teams              = state.teamsBySeason?.[state.currentSeasonId] ?? []
 
   // --- Trainings ---
   const addTraining = useCallback((training) => {
@@ -173,47 +184,47 @@ export function AppProvider({ children }) {
     })
   }, [setState])
 
-  // --- Teams ---
+  // --- Teams (per-season) ---
   const addTeam = useCallback((team) => {
-    setState((s) => ({ ...s, teams: [...s.teams, { ...team, id: crypto.randomUUID() }] }))
+    setState((s) => {
+      const cur = s.teamsBySeason?.[s.currentSeasonId] ?? []
+      return { ...s, teamsBySeason: { ...(s.teamsBySeason ?? {}), [s.currentSeasonId]: [...cur, { ...team, id: crypto.randomUUID() }] } }
+    })
   }, [setState])
 
   const updateTeam = useCallback((teamId, patch) => {
-    setState((s) => ({
-      ...s,
-      teams: s.teams.map((t) => (t.id === teamId ? { ...t, ...patch } : t)),
-    }))
+    setState((s) => {
+      const cur = s.teamsBySeason?.[s.currentSeasonId] ?? []
+      return { ...s, teamsBySeason: { ...(s.teamsBySeason ?? {}), [s.currentSeasonId]: cur.map((t) => (t.id === teamId ? { ...t, ...patch } : t)) } }
+    })
   }, [setState])
 
   const deleteTeam = useCallback((teamId) => {
     setState((s) => {
-      const filterTs = (ts) => ts.filter((t) =>
-        t.teamIds ? !t.teamIds.includes(teamId) : t.teamId !== teamId
-      )
+      const cur   = s.teamsBySeason?.[s.currentSeasonId] ?? []
+      const curTs = s.trainingsBySeason?.[s.currentSeasonId] ?? []
+      const filterTs = (ts) => ts.filter((t) => t.teamIds ? !t.teamIds.includes(teamId) : t.teamId !== teamId)
       return {
         ...s,
-        teams: s.teams.filter((t) => t.id !== teamId),
-        trainingsBySeason: Object.fromEntries(
-          Object.entries(s.trainingsBySeason ?? {}).map(([id, ts]) => [id, filterTs(ts)])
-        ),
+        teamsBySeason:     { ...(s.teamsBySeason     ?? {}), [s.currentSeasonId]: cur.filter((t) => t.id !== teamId) },
+        trainingsBySeason: { ...(s.trainingsBySeason ?? {}), [s.currentSeasonId]: filterTs(curTs) },
       }
     })
   }, [setState])
 
   // --- Seasons ---
-  const addSeason = useCallback((name) => {
+  const addSeason = useCallback((name, { copyAvailabilities = true, copyTeams = true } = {}) => {
     const id = crypto.randomUUID().slice(0, 8)
     setState((s) => {
-      const curAvails = s.availabilitiesBySeason?.[s.currentSeasonId] ?? []
+      const curAvails = copyAvailabilities ? (s.availabilitiesBySeason?.[s.currentSeasonId] ?? []) : []
+      const curTeams  = copyTeams          ? (s.teamsBySeason?.[s.currentSeasonId]           ?? []) : []
       return {
         ...s,
         seasons: [...(s.seasons ?? []), { id, name }],
         currentSeasonId: id,
-        trainingsBySeason: { ...(s.trainingsBySeason ?? {}), [id]: [] },
-        availabilitiesBySeason: {
-          ...(s.availabilitiesBySeason ?? {}),
-          [id]: curAvails.map((a) => ({ ...a, id: crypto.randomUUID() })),
-        },
+        trainingsBySeason:      { ...(s.trainingsBySeason      ?? {}), [id]: [] },
+        availabilitiesBySeason: { ...(s.availabilitiesBySeason ?? {}), [id]: curAvails.map((a) => ({ ...a, id: crypto.randomUUID() })) },
+        teamsBySeason:          { ...(s.teamsBySeason          ?? {}), [id]: curTeams.map((t) => ({ ...t })) },
       }
     })
   }, [setState])
@@ -286,6 +297,7 @@ export function AppProvider({ children }) {
     ...state,
     trainings,
     hallAvailabilities,
+    teams,
     isLoading,
     addTraining, moveTraining, updateTraining, deleteTraining,
     addHall, updateHall, deleteHall, setHallAvailabilities,
