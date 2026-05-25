@@ -74,12 +74,12 @@ export function AppProvider({ children }) {
 
       return next
     })
-  }, [])
+  }, [isLoading])
 
   // Computed: current season's data
   const trainings          = state.trainingsBySeason?.[state.currentSeasonId] ?? []
   const hallAvailabilities = state.availabilitiesBySeason?.[state.currentSeasonId] ?? []
-  const teams              = state.teamsBySeason?.[state.currentSeasonId] ?? []
+  const teams              = state.teamsBySeason?.[state.currentSeasonId] ?? state.teams ?? []
 
   // --- Trainings ---
   const addTraining = useCallback((training) => {
