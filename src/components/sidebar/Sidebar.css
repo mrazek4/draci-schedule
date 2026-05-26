@@ -164,6 +164,11 @@
   background: var(--color-sidebar-hover);
 }
 
+.sidebar__filter-btn--active {
+  color: #ffffff;
+  background: var(--color-sidebar-hover);
+}
+
 /* ── team list ── */
 .sidebar__team-list {
   display: flex;

@@ -125,6 +125,20 @@ function AppInner() {
       }
       moveTraining(drag.trainingId, slot.dayOfWeek, slot.hallId, slot.startMinute)
     }
+
+    if (drag.type === 'NEW_TRAINING_FROM_HALL') {
+      const valid = isWithinAvailability(
+        drag.hallId, slot.dayOfWeek,
+        slot.startMinute, slot.startMinute + 60,
+        hallAvailabilities
+      )
+      if (!valid) {
+        const hall = halls.find((h) => h.id === drag.hallId)
+        showToast(`Hala ${hall?.name ?? ''} v tento čas není dostupná`)
+        return
+      }
+      setShowAddModal({ hallId: drag.hallId, dayOfWeek: slot.dayOfWeek, startMinute: slot.startMinute })
+    }
   }
 
   // Determine drag overlay content
@@ -136,6 +150,17 @@ function AppInner() {
         <div className="drag-overlay-tile">
           <span style={{ width: 10, height: 10, borderRadius: '50%', background: team.color, display: 'inline-block' }} />
           {team.name}
+        </div>
+      )
+    }
+  }
+  if (activeItem?.type === 'NEW_TRAINING_FROM_HALL') {
+    const hall = halls.find((h) => h.id === activeItem.hallId)
+    if (hall) {
+      overlayContent = (
+        <div className="drag-overlay-tile">
+          <span style={{ width: 10, height: 10, borderRadius: '50%', background: hall.color, display: 'inline-block' }} />
+          {hall.name}
         </div>
       )
     }

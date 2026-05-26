@@ -3,6 +3,7 @@ import { useApp } from '../../context/AppContext.jsx'
 import { useAuth } from '../../auth/AuthProvider.jsx'
 import { useRole, useCanEdit } from '../../auth/useRole.js'
 import TeamList from './TeamList.jsx'
+import HallTile from './HallTile.jsx'
 import SeasonModal from '../modals/SeasonModal.jsx'
 import { exportToExcel } from '../../utils/exportUtils.js'
 import { parseExcelTrainings } from '../../utils/importUtils.js'
@@ -17,6 +18,7 @@ export default function Sidebar({ onManageTeams, onManageHalls, onManageUsers, o
   const fileInputRef = useRef(null)
   const [hallMapping, setHallMapping] = useState(null)
   const [showSeasonModal, setShowSeasonModal] = useState(false)
+  const [listMode, setListMode] = useState('teams')
 
   function handleDeleteSeason() {
     if ((seasons?.length ?? 0) <= 1) { alert('Nelze smazat poslední sezónu.'); return }
@@ -166,14 +168,28 @@ export default function Sidebar({ onManageTeams, onManageHalls, onManageUsers, o
             </div>
 
             <div className="sidebar__section-header">
-              <p className="sidebar__section-title">Týmy</p>
-              <div className="sidebar__filter-btns">
-                <button className="sidebar__filter-btn" onClick={onShowAll}>vše</button>
-                <button className="sidebar__filter-btn" onClick={onHideAll}>žádný</button>
+              <div style={{ display: 'flex', gap: 0 }}>
+                <button
+                  className={`sidebar__filter-btn${listMode === 'teams' ? ' sidebar__filter-btn--active' : ''}`}
+                  onClick={() => setListMode('teams')}
+                >Týmy</button>
+                <button
+                  className={`sidebar__filter-btn${listMode === 'halls' ? ' sidebar__filter-btn--active' : ''}`}
+                  onClick={() => setListMode('halls')}
+                >Haly</button>
               </div>
+              {listMode === 'teams' && (
+                <div className="sidebar__filter-btns">
+                  <button className="sidebar__filter-btn" onClick={onShowAll}>vše</button>
+                  <button className="sidebar__filter-btn" onClick={onHideAll}>žádný</button>
+                </div>
+              )}
             </div>
             <div className="sidebar__team-list">
-              <TeamList teams={teams} hiddenTeamIds={hiddenTeamIds} onToggleTeam={onToggleTeam} />
+              {listMode === 'teams'
+                ? <TeamList teams={teams} hiddenTeamIds={hiddenTeamIds} onToggleTeam={onToggleTeam} />
+                : halls.map((h) => <HallTile key={h.id} hall={h} />)
+              }
             </div>
           </>
         )}
