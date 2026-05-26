@@ -3,7 +3,7 @@ import { useDroppable } from '@dnd-kit/core'
 export default function CampSlot({ teamId, startMinute, isHour, style, onClick }) {
   const { setNodeRef, isOver } = useDroppable({
     id: `camp-slot-${teamId}-${startMinute}`,
-    data: { teamId, startMinute },
+    data: { teamId, startMinute, available: true },
   })
 
   return (
