@@ -4,7 +4,7 @@ import { useAuth } from '../../auth/AuthProvider.jsx'
 import { useRole, useCanEdit } from '../../auth/useRole.js'
 import TeamList from './TeamList.jsx'
 import SeasonModal from '../modals/SeasonModal.jsx'
-import { exportToExcel, exportDailySchedule } from '../../utils/exportUtils.js'
+import { exportToExcel } from '../../utils/exportUtils.js'
 import { parseExcelTrainings } from '../../utils/importUtils.js'
 import logo from '../../assets/1629729771_club_logo.webp'
 import './Sidebar.css'
@@ -17,15 +17,6 @@ export default function Sidebar({ onManageTeams, onManageHalls, onManageUsers, o
   const fileInputRef = useRef(null)
   const [hallMapping, setHallMapping] = useState(null)
   const [showSeasonModal, setShowSeasonModal] = useState(false)
-  const [dayExportOpen, setDayExportOpen] = useState(false)
-
-  const DAY_LABELS = ['PO', 'ÚT', 'ST', 'ČT', 'PÁ', 'SO', 'NE']
-
-  async function handleDayExport(dayIndex) {
-    setDayExportOpen(false)
-    try { await exportDailySchedule(dayIndex, teams, trainings, halls) }
-    catch (err) { alert('Chyba při exportu: ' + err.message) }
-  }
 
   function handleDeleteSeason() {
     if ((seasons?.length ?? 0) <= 1) { alert('Nelze smazat poslední sezónu.'); return }
@@ -193,47 +184,30 @@ export default function Sidebar({ onManageTeams, onManageHalls, onManageUsers, o
               + Přidat trénink
             </button>
           )}
-          {canEdit && (
+          {canEdit && viewMode !== 'camp' && (
             <button className="sidebar__btn" onClick={onManageTeams}>
               <span>⚙</span> Správa týmů
             </button>
           )}
-          {canEdit && (
+          {canEdit && viewMode !== 'camp' && (
             <button className="sidebar__btn" onClick={onManageHalls}>
               <span>🏟</span> Správa hal
             </button>
           )}
-          {role === 'admin' && (
+          {role === 'admin' && viewMode !== 'camp' && (
             <button className="sidebar__btn" onClick={onManageUsers}>
               <span>👥</span> Správa uživatelů
             </button>
           )}
-          <button className="sidebar__btn" onClick={async () => {
-            try { await exportToExcel(trainings, teams, halls) }
-            catch (err) { alert('Chyba při exportu: ' + err.message) }
-          }}>
-            ↓ Export .xlsx
-          </button>
-          <div style={{ position: 'relative' }}>
-            <button className="sidebar__btn" onClick={() => setDayExportOpen((o) => !o)}>
-              ↓ Denní export
+          {viewMode !== 'camp' && (
+            <button className="sidebar__btn" onClick={async () => {
+              try { await exportToExcel(trainings, teams, halls) }
+              catch (err) { alert('Chyba při exportu: ' + err.message) }
+            }}>
+              ↓ Export .xlsx
             </button>
-            {dayExportOpen && (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
-                {DAY_LABELS.map((label, i) => (
-                  <button
-                    key={i}
-                    className="sidebar__btn"
-                    style={{ flex: '1 1 auto', padding: '4px 0', fontSize: 11, minWidth: 32 }}
-                    onClick={() => handleDayExport(i)}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-          {canEdit && (
+          )}
+          {canEdit && viewMode !== 'camp' && (
             <button className="sidebar__btn" onClick={() => fileInputRef.current?.click()}>
               ↑ Import .xlsx
             </button>
