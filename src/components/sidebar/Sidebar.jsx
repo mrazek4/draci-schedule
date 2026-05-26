@@ -93,17 +93,15 @@ export default function Sidebar({ onManageTeams, onManageHalls, onManageUsers, o
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: 4, padding: '8px 12px 0' }}>
+        <div className="sidebar__tabs">
           <button
-            className={`sidebar__btn${viewMode === 'schedule' ? ' sidebar__btn--accent' : ''}`}
-            style={{ flex: 1, padding: '5px 0', fontSize: 12 }}
+            className={`sidebar__tab${viewMode === 'schedule' ? ' sidebar__tab--active' : ''}`}
             onClick={() => onSwitchView('schedule')}
           >
             Rozvrh
           </button>
           <button
-            className={`sidebar__btn${viewMode === 'camp' ? ' sidebar__btn--accent' : ''}`}
-            style={{ flex: 1, padding: '5px 0', fontSize: 12 }}
+            className={`sidebar__tab${viewMode === 'camp' ? ' sidebar__tab--active' : ''}`}
             onClick={() => onSwitchView('camp')}
           >
             Soustředění
@@ -129,7 +127,7 @@ export default function Sidebar({ onManageTeams, onManageHalls, onManageUsers, o
                       padding: '6px 8px',
                       borderRadius: 'var(--radius-sm)',
                       background: currentCampId === camp.id ? 'var(--color-accent)' : 'transparent',
-                      color: currentCampId === camp.id ? '#fff' : 'var(--color-text)',
+                      color: currentCampId === camp.id ? '#fff' : 'rgba(255,255,255,0.75)',
                       cursor: 'pointer',
                       fontSize: 12,
                       fontWeight: 600,
@@ -190,7 +188,7 @@ export default function Sidebar({ onManageTeams, onManageHalls, onManageUsers, o
         )}
 
         <div className="sidebar__actions">
-          {canEdit && (
+          {canEdit && viewMode !== 'camp' && (
             <button className="sidebar__btn sidebar__btn--accent" onClick={onAddTraining}>
               + Přidat trénink
             </button>
