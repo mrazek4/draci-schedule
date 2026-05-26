@@ -47,6 +47,9 @@ export function AppProvider({ children }) {
         next = { ...restNoTeams, teamsBySeason }
       }
 
+      // Migrate missing camps
+      if (next.camps === undefined) next = { ...next, camps: [], campActivities: {} }
+
       // Migrate missing userRoles + bootstrap admin from env var
       if (next.userRoles === undefined) {
         next = { ...next, userRoles: defaultState.userRoles }
@@ -290,6 +293,68 @@ export function AppProvider({ children }) {
     })
   }, [setState])
 
+  // --- Camps ---
+  const addCamp = useCallback((camp) => {
+    setState((s) => ({
+      ...s,
+      camps: [...(s.camps ?? []), { id: crypto.randomUUID().slice(0, 8), ...camp }],
+    }))
+  }, [setState])
+
+  const updateCamp = useCallback((id, patch) => {
+    setState((s) => ({
+      ...s,
+      camps: (s.camps ?? []).map((c) => (c.id === id ? { ...c, ...patch } : c)),
+    }))
+  }, [setState])
+
+  const deleteCamp = useCallback((id) => {
+    setState((s) => {
+      const { [id]: _deleted, ...restActivities } = s.campActivities ?? {}
+      return {
+        ...s,
+        camps: (s.camps ?? []).filter((c) => c.id !== id),
+        campActivities: restActivities,
+      }
+    })
+  }, [setState])
+
+  const addCampActivity = useCallback((campId, dateStr, activity) => {
+    setState((s) => {
+      const all  = s.campActivities ?? {}
+      const days = all[campId] ?? {}
+      const list = days[dateStr] ?? []
+      return {
+        ...s,
+        campActivities: { ...all, [campId]: { ...days, [dateStr]: [...list, { id: crypto.randomUUID(), ...activity }] } },
+      }
+    })
+  }, [setState])
+
+  const updateCampActivity = useCallback((campId, dateStr, activityId, patch) => {
+    setState((s) => {
+      const all  = s.campActivities ?? {}
+      const days = all[campId] ?? {}
+      const list = days[dateStr] ?? []
+      return {
+        ...s,
+        campActivities: { ...all, [campId]: { ...days, [dateStr]: list.map((a) => (a.id === activityId ? { ...a, ...patch } : a)) } },
+      }
+    })
+  }, [setState])
+
+  const deleteCampActivity = useCallback((campId, dateStr, activityId) => {
+    setState((s) => {
+      const all  = s.campActivities ?? {}
+      const days = all[campId] ?? {}
+      const list = days[dateStr] ?? []
+      return {
+        ...s,
+        campActivities: { ...all, [campId]: { ...days, [dateStr]: list.filter((a) => a.id !== activityId) } },
+      }
+    })
+  }, [setState])
+
   // --- Week navigation ---
   const setWeekOffset = useCallback((offset) => update({ weekOffset: offset }), [update])
 
@@ -304,6 +369,7 @@ export function AppProvider({ children }) {
     addTeam, updateTeam, deleteTeam,
     addSeason, deleteSeason, setCurrentSeason, setTrainingsForSeason, importTrainings,
     setUserRole, removeUserRole,
+    addCamp, updateCamp, deleteCamp, addCampActivity, updateCampActivity, deleteCampActivity,
     setWeekOffset,
   }
 

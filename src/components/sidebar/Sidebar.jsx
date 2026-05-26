@@ -9,8 +9,8 @@ import { parseExcelTrainings } from '../../utils/importUtils.js'
 import logo from '../../assets/1629729771_club_logo.webp'
 import './Sidebar.css'
 
-export default function Sidebar({ onManageTeams, onManageHalls, onManageUsers, onAddTraining, theme, onToggleTheme, hiddenTeamIds, onToggleTeam, onShowAll, onHideAll }) {
-  const { teams, halls, trainings, seasons, currentSeasonId, setCurrentSeason, addSeason, deleteSeason, importTrainings, addHall } = useApp()
+export default function Sidebar({ onManageTeams, onManageHalls, onManageUsers, onAddTraining, theme, onToggleTheme, hiddenTeamIds, onToggleTeam, onShowAll, onHideAll, viewMode, onSwitchView, currentCampId, onSelectCamp, onAddCamp, onEditCamp }) {
+  const { teams, halls, trainings, seasons, currentSeasonId, setCurrentSeason, addSeason, deleteSeason, importTrainings, addHall, camps, deleteCamp } = useApp()
   const { user, logout } = useAuth()
   const canEdit = useCanEdit()
   const role    = useRole()
@@ -93,30 +93,101 @@ export default function Sidebar({ onManageTeams, onManageHalls, onManageUsers, o
           </div>
         </div>
 
-        <div className="sidebar__season">
-          <select
-            className="sidebar__season-select"
-            value={currentSeasonId ?? ''}
-            onChange={(e) => setCurrentSeason(e.target.value)}
+        <div style={{ display: 'flex', gap: 4, padding: '8px 12px 0' }}>
+          <button
+            className={`sidebar__btn${viewMode === 'schedule' ? ' sidebar__btn--accent' : ''}`}
+            style={{ flex: 1, padding: '5px 0', fontSize: 12 }}
+            onClick={() => onSwitchView('schedule')}
           >
-            {(seasons ?? []).map((s) => (
-              <option key={s.id} value={s.id}>{s.name}</option>
-            ))}
-          </select>
-          {canEdit && <button className="sidebar__season-btn" onClick={() => setShowSeasonModal(true)} title="Přidat sezónu">+</button>}
-          {canEdit && <button className="sidebar__season-btn sidebar__season-btn--del" onClick={handleDeleteSeason} title="Smazat sezónu" disabled={(seasons?.length ?? 0) <= 1}>✕</button>}
+            Rozvrh
+          </button>
+          <button
+            className={`sidebar__btn${viewMode === 'camp' ? ' sidebar__btn--accent' : ''}`}
+            style={{ flex: 1, padding: '5px 0', fontSize: 12 }}
+            onClick={() => onSwitchView('camp')}
+          >
+            Soustředění
+          </button>
         </div>
 
-        <div className="sidebar__section-header">
-          <p className="sidebar__section-title">Týmy</p>
-          <div className="sidebar__filter-btns">
-            <button className="sidebar__filter-btn" onClick={onShowAll}>vše</button>
-            <button className="sidebar__filter-btn" onClick={onHideAll}>žádný</button>
-          </div>
-        </div>
-        <div className="sidebar__team-list">
-          <TeamList teams={teams} hiddenTeamIds={hiddenTeamIds} onToggleTeam={onToggleTeam} />
-        </div>
+        {viewMode === 'camp' ? (
+          <>
+            <div className="sidebar__section-header" style={{ marginTop: 8 }}>
+              <p className="sidebar__section-title">Soustředění</p>
+              {canEdit && <button className="sidebar__season-btn" onClick={onAddCamp} title="Přidat soustředění">+</button>}
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '0 8px' }}>
+              {(camps ?? []).length === 0
+                ? <p style={{ fontSize: 12, color: 'var(--color-text-muted)', padding: '8px 4px' }}>Žádná soustředění.</p>
+                : (camps ?? []).map((camp) => (
+                  <div
+                    key={camp.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      padding: '6px 8px',
+                      borderRadius: 'var(--radius-sm)',
+                      background: currentCampId === camp.id ? 'var(--color-accent)' : 'transparent',
+                      color: currentCampId === camp.id ? '#fff' : 'var(--color-text)',
+                      cursor: 'pointer',
+                      fontSize: 12,
+                      fontWeight: 600,
+                      marginBottom: 2,
+                    }}
+                    onClick={() => onSelectCamp(camp.id)}
+                  >
+                    <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{camp.name}</span>
+                    {canEdit && (
+                      <button
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, opacity: 0.7, padding: '0 2px', color: 'inherit' }}
+                        onClick={(e) => { e.stopPropagation(); onEditCamp(camp) }}
+                        title="Upravit"
+                      >✎</button>
+                    )}
+                    {canEdit && (
+                      <button
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, opacity: 0.7, padding: '0 2px', color: 'inherit' }}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          if (window.confirm(`Smazat soustředění "${camp.name}"?`)) deleteCamp(camp.id)
+                        }}
+                        title="Smazat"
+                      >✕</button>
+                    )}
+                  </div>
+                ))
+              }
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="sidebar__season">
+              <select
+                className="sidebar__season-select"
+                value={currentSeasonId ?? ''}
+                onChange={(e) => setCurrentSeason(e.target.value)}
+              >
+                {(seasons ?? []).map((s) => (
+                  <option key={s.id} value={s.id}>{s.name}</option>
+                ))}
+              </select>
+              {canEdit && <button className="sidebar__season-btn" onClick={() => setShowSeasonModal(true)} title="Přidat sezónu">+</button>}
+              {canEdit && <button className="sidebar__season-btn sidebar__season-btn--del" onClick={handleDeleteSeason} title="Smazat sezónu" disabled={(seasons?.length ?? 0) <= 1}>✕</button>}
+            </div>
+
+            <div className="sidebar__section-header">
+              <p className="sidebar__section-title">Týmy</p>
+              <div className="sidebar__filter-btns">
+                <button className="sidebar__filter-btn" onClick={onShowAll}>vše</button>
+                <button className="sidebar__filter-btn" onClick={onHideAll}>žádný</button>
+              </div>
+            </div>
+            <div className="sidebar__team-list">
+              <TeamList teams={teams} hiddenTeamIds={hiddenTeamIds} onToggleTeam={onToggleTeam} />
+            </div>
+          </>
+        )}
 
         <div className="sidebar__actions">
           {canEdit && (

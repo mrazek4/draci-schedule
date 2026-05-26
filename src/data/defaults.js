@@ -55,4 +55,6 @@ export const defaultState = {
   trainingsBySeason: { [DEFAULT_SEASON_ID]: [] },
   weekOffset: 0,
   userRoles: {},
+  camps: [],
+  campActivities: {},
 }

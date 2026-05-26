@@ -15,26 +15,44 @@ import LoginPage from './auth/LoginPage.jsx'
 import AppShell from './components/layout/AppShell.jsx'
 import Sidebar from './components/sidebar/Sidebar.jsx'
 import CalendarView from './components/calendar/CalendarView.jsx'
+import CampView from './components/camp/CampView.jsx'
 import TrainingModal from './components/modals/TrainingModal.jsx'
 import TeamModal from './components/modals/TeamModal.jsx'
 import HallModal from './components/modals/HallModal.jsx'
 import UserModal from './components/modals/UserModal.jsx'
+import CampModal from './components/modals/CampModal.jsx'
+import CampActivityModal from './components/modals/CampActivityModal.jsx'
 import { minutesToTime, SLOT_MINUTES } from './utils/timeUtils.js'
 import { isWithinAvailability } from './utils/calendarUtils.js'
 
 function AppInner() {
-  const { teams, halls, hallAvailabilities, trainings, addTraining, moveTraining, isLoading } = useApp()
+  const { teams, halls, hallAvailabilities, trainings, camps, addTraining, moveTraining, isLoading } = useApp()
 
-  const [activeItem, setActiveItem]         = useState(null)
-  const [trainingModal, setTrainingModal]   = useState(null)
-  const [showAddModal, setShowAddModal]     = useState(null)
-  const [showTeamModal, setShowTeamModal]   = useState(false)
-  const [showHallModal, setShowHallModal]   = useState(false)
-  const [showUserModal, setShowUserModal]   = useState(false)
-  const [toast, setToast]                   = useState(null)
-  const [theme, setTheme]                   = useState(() => localStorage.getItem('theme') || 'light')
-  const [hiddenTeamIds, setHiddenTeamIds]   = useState([])
+  const [activeItem, setActiveItem]               = useState(null)
+  const [trainingModal, setTrainingModal]         = useState(null)
+  const [showAddModal, setShowAddModal]           = useState(null)
+  const [showTeamModal, setShowTeamModal]         = useState(false)
+  const [showHallModal, setShowHallModal]         = useState(false)
+  const [showUserModal, setShowUserModal]         = useState(false)
+  const [toast, setToast]                         = useState(null)
+  const [theme, setTheme]                         = useState(() => localStorage.getItem('theme') || 'light')
+  const [hiddenTeamIds, setHiddenTeamIds]         = useState([])
+  const [viewMode, setViewMode]                   = useState('schedule')
+  const [currentCampId, setCurrentCampId]         = useState(null)
+  const [currentCampDate, setCurrentCampDate]     = useState(null)
+  const [showCampModal, setShowCampModal]         = useState(null)
+  const [campActivityModal, setCampActivityModal] = useState(null)
   const canEdit = useCanEdit()
+
+  const activeCamp = camps?.find((c) => c.id === currentCampId)
+  const campTeams  = activeCamp ? teams.filter((t) => activeCamp.teamIds?.includes(t.id)) : []
+
+  function switchToView(mode) {
+    setViewMode(mode)
+    if (mode === 'camp' && !currentCampId && camps?.length > 0) {
+      setCurrentCampId(camps[0].id)
+    }
+  }
 
   function toggleTeamVisibility(teamId) {
     setHiddenTeamIds((prev) =>
@@ -154,10 +172,26 @@ function AppInner() {
             onToggleTeam={toggleTeamVisibility}
             onShowAll={() => setHiddenTeamIds([])}
             onHideAll={() => setHiddenTeamIds(teams.map((t) => t.id))}
+            viewMode={viewMode}
+            onSwitchView={switchToView}
+            currentCampId={currentCampId}
+            onSelectCamp={(id) => { setCurrentCampId(id); setCurrentCampDate(null) }}
+            onAddCamp={() => setShowCampModal({})}
+            onEditCamp={(camp) => setShowCampModal(camp)}
           />
         }
       >
-        <CalendarView onTrainingClick={setTrainingModal} onSlotClick={canEdit ? (prefill) => setShowAddModal(prefill) : null} hiddenTeamIds={hiddenTeamIds} />
+        {viewMode === 'schedule'
+          ? <CalendarView onTrainingClick={setTrainingModal} onSlotClick={canEdit ? (prefill) => setShowAddModal(prefill) : null} hiddenTeamIds={hiddenTeamIds} />
+          : <CampView
+              campId={currentCampId}
+              date={currentCampDate}
+              onDateChange={setCurrentCampDate}
+              onSlotClick={canEdit ? (prefill) => setCampActivityModal({ prefill }) : null}
+              onActivityClick={(activity) => setCampActivityModal({ activity })}
+              onBack={() => setViewMode('schedule')}
+            />
+        }
       </AppShell>
 
       <DragOverlay>{overlayContent}</DragOverlay>
@@ -174,6 +208,23 @@ function AppInner() {
       {showTeamModal  && <TeamModal onClose={() => setShowTeamModal(false)} />}
       {showHallModal  && <HallModal onClose={() => setShowHallModal(false)} />}
       {showUserModal  && <UserModal onClose={() => setShowUserModal(false)} />}
+      {showCampModal !== null && (
+        <CampModal
+          camp={showCampModal?.id ? showCampModal : undefined}
+          onClose={() => setShowCampModal(null)}
+          onSaved={() => setShowCampModal(null)}
+        />
+      )}
+      {campActivityModal !== null && currentCampId && currentCampDate && (
+        <CampActivityModal
+          activity={campActivityModal.activity}
+          prefill={campActivityModal.prefill}
+          campId={currentCampId}
+          dateStr={currentCampDate}
+          campTeams={campTeams}
+          onClose={() => setCampActivityModal(null)}
+        />
+      )}
     </DndContext>
   )
 }
