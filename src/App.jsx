@@ -131,11 +131,12 @@ function AppInner() {
 
     if (drag.type === 'MOVE_CAMP_ACTIVITY') {
       if (!slot.teamId) return
-      const dayActivities = campActivities?.[currentCampId]?.[currentCampDate] ?? []
+      const activeDateStr = currentCampDate ?? activeCamp?.startDate
+      const dayActivities = campActivities?.[currentCampId]?.[activeDateStr] ?? []
       const activity = dayActivities.find((a) => a.id === drag.activityId)
       if (!activity) return
       const duration = activity.endMinute - activity.startMinute
-      updateCampActivity(currentCampId, currentCampDate, activity.id, {
+      updateCampActivity(currentCampId, activeDateStr, activity.id, {
         teamId: slot.teamId,
         startMinute: slot.startMinute,
         endMinute: slot.startMinute + duration,
@@ -177,7 +178,7 @@ function AppInner() {
     }
   }
   if (activeItem?.type === 'MOVE_CAMP_ACTIVITY') {
-    const dayActivities = campActivities?.[currentCampId]?.[currentCampDate] ?? []
+    const dayActivities = campActivities?.[currentCampId]?.[currentCampDate ?? activeCamp?.startDate] ?? []
     const activity = dayActivities.find((a) => a.id === activeItem.activityId)
     if (activity) {
       const team = campTeams.find((t) => t.id === activity.teamId)
