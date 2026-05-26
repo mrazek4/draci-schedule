@@ -1,6 +1,7 @@
 import CalendarGrid from './CalendarGrid.jsx'
+import TeamCalendarGrid from './TeamCalendarGrid.jsx'
 
-export default function CalendarView({ onTrainingClick, onSlotClick, hiddenTeamIds }) {
+export default function CalendarView({ onTrainingClick, onSlotClick, hiddenTeamIds, perspective }) {
   return (
     <div className="calendar-wrap">
       <div className="calendar-header">
@@ -9,7 +10,10 @@ export default function CalendarView({ onTrainingClick, onSlotClick, hiddenTeamI
           <div className="calendar-header__sub">FBC Draci Říčany</div>
         </div>
       </div>
-      <CalendarGrid onTrainingClick={onTrainingClick} onSlotClick={onSlotClick} hiddenTeamIds={hiddenTeamIds} />
+      {perspective === 'halls'
+        ? <TeamCalendarGrid onTrainingClick={onTrainingClick} onSlotClick={onSlotClick} />
+        : <CalendarGrid onTrainingClick={onTrainingClick} onSlotClick={onSlotClick} hiddenTeamIds={hiddenTeamIds} />
+      }
     </div>
   )
 }

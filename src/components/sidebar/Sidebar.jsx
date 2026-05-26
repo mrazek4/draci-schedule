@@ -10,7 +10,7 @@ import { parseExcelTrainings } from '../../utils/importUtils.js'
 import logo from '../../assets/1629729771_club_logo.webp'
 import './Sidebar.css'
 
-export default function Sidebar({ onManageTeams, onManageHalls, onManageUsers, onAddTraining, theme, onToggleTheme, hiddenTeamIds, onToggleTeam, onShowAll, onHideAll, viewMode, onSwitchView, currentCampId, onSelectCamp, onAddCamp, onEditCamp }) {
+export default function Sidebar({ onManageTeams, onManageHalls, onManageUsers, onAddTraining, theme, onToggleTheme, hiddenTeamIds, onToggleTeam, onShowAll, onHideAll, viewMode, onSwitchView, currentCampId, onSelectCamp, onAddCamp, onEditCamp, listMode, onListModeChange }) {
   const { teams, halls, trainings, seasons, currentSeasonId, setCurrentSeason, addSeason, deleteSeason, importTrainings, addHall, camps, deleteCamp } = useApp()
   const { user, logout } = useAuth()
   const canEdit = useCanEdit()
@@ -18,7 +18,6 @@ export default function Sidebar({ onManageTeams, onManageHalls, onManageUsers, o
   const fileInputRef = useRef(null)
   const [hallMapping, setHallMapping] = useState(null)
   const [showSeasonModal, setShowSeasonModal] = useState(false)
-  const [listMode, setListMode] = useState('teams')
 
   function handleDeleteSeason() {
     if ((seasons?.length ?? 0) <= 1) { alert('Nelze smazat poslední sezónu.'); return }
@@ -171,11 +170,11 @@ export default function Sidebar({ onManageTeams, onManageHalls, onManageUsers, o
               <div style={{ display: 'flex', gap: 0 }}>
                 <button
                   className={`sidebar__filter-btn${listMode === 'teams' ? ' sidebar__filter-btn--active' : ''}`}
-                  onClick={() => setListMode('teams')}
+                  onClick={() => onListModeChange('teams')}
                 >Týmy</button>
                 <button
                   className={`sidebar__filter-btn${listMode === 'halls' ? ' sidebar__filter-btn--active' : ''}`}
-                  onClick={() => setListMode('halls')}
+                  onClick={() => onListModeChange('halls')}
                 >Haly</button>
               </div>
               {listMode === 'teams' && (

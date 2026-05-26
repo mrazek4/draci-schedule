@@ -1,10 +1,10 @@
 import { useDroppable } from '@dnd-kit/core'
 
-export default function TimeSlot({ dayOfWeek, hallId, startMinute, available, style, children, onClick }) {
-  const id = `slot-${dayOfWeek}-${hallId}-${startMinute}`
+export default function TimeSlot({ dayOfWeek, hallId, teamId, startMinute, available, style, children, onClick }) {
+  const id = teamId ? `slot-${dayOfWeek}-t${teamId}-${startMinute}` : `slot-${dayOfWeek}-${hallId}-${startMinute}`
   const { setNodeRef, isOver } = useDroppable({
     id,
-    data: { dayOfWeek, hallId, startMinute, available },
+    data: { dayOfWeek, hallId, teamId, startMinute, available },
     disabled: !available,
   })
 

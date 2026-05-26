@@ -38,6 +38,7 @@ function AppInner() {
   const [theme, setTheme]                         = useState(() => localStorage.getItem('theme') || 'light')
   const [hiddenTeamIds, setHiddenTeamIds]         = useState([])
   const [viewMode, setViewMode]                   = useState('schedule')
+  const [perspective, setPerspective]             = useState('teams')
   const [currentCampId, setCurrentCampId]         = useState(null)
   const [currentCampDate, setCurrentCampDate]     = useState(null)
   const [showCampModal, setShowCampModal]         = useState(null)
@@ -90,6 +91,7 @@ function AppInner() {
     const drag = active.data.current
 
     if (drag.type === 'NEW_TRAINING') {
+      if (!slot.hallId) return  // team-row slots don't accept team tiles
       const valid = isWithinAvailability(
         slot.hallId, slot.dayOfWeek,
         slot.startMinute, slot.startMinute + 60,
@@ -110,6 +112,7 @@ function AppInner() {
     }
 
     if (drag.type === 'MOVE_TRAINING') {
+      if (!slot.hallId) return  // team-row slots don't accept move
       const training = trainings.find((t) => t.id === drag.trainingId)
       if (!training) return
       const duration = training.endMinute - training.startMinute
@@ -137,7 +140,12 @@ function AppInner() {
         showToast(`Hala ${hall?.name ?? ''} v tento čas není dostupná`)
         return
       }
-      setShowAddModal({ hallId: drag.hallId, dayOfWeek: slot.dayOfWeek, startMinute: slot.startMinute })
+      setShowAddModal({
+        hallId: drag.hallId,
+        dayOfWeek: slot.dayOfWeek,
+        startMinute: slot.startMinute,
+        ...(slot.teamId ? { teamIds: [slot.teamId] } : {}),
+      })
     }
   }
 
@@ -203,11 +211,13 @@ function AppInner() {
             onSelectCamp={(id) => { setCurrentCampId(id); setCurrentCampDate(null) }}
             onAddCamp={() => setShowCampModal({})}
             onEditCamp={(camp) => setShowCampModal(camp)}
+            listMode={perspective}
+            onListModeChange={setPerspective}
           />
         }
       >
         {viewMode === 'schedule'
-          ? <CalendarView onTrainingClick={setTrainingModal} onSlotClick={canEdit ? (prefill) => setShowAddModal(prefill) : null} hiddenTeamIds={hiddenTeamIds} />
+          ? <CalendarView onTrainingClick={setTrainingModal} onSlotClick={canEdit ? (prefill) => setShowAddModal(prefill) : null} hiddenTeamIds={hiddenTeamIds} perspective={perspective} />
           : <CampView
               campId={currentCampId}
               date={currentCampDate}
