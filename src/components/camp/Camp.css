@@ -166,6 +166,10 @@
   background: var(--color-surface-2) !important;
 }
 
+.camp-slot--over {
+  background: rgba(79, 110, 247, 0.25) !important;
+}
+
 .camp-slot--hour {
   border-right-color: var(--color-border);
 }

@@ -26,7 +26,7 @@ import { minutesToTime, SLOT_MINUTES } from './utils/timeUtils.js'
 import { isWithinAvailability } from './utils/calendarUtils.js'
 
 function AppInner() {
-  const { teams, halls, hallAvailabilities, trainings, camps, addTraining, moveTraining, isLoading } = useApp()
+  const { teams, halls, hallAvailabilities, trainings, camps, campActivities, addTraining, moveTraining, updateCampActivity, isLoading } = useApp()
 
   const [activeItem, setActiveItem]               = useState(null)
   const [trainingModal, setTrainingModal]         = useState(null)
@@ -129,6 +129,20 @@ function AppInner() {
       moveTraining(drag.trainingId, slot.dayOfWeek, slot.hallId, slot.startMinute)
     }
 
+    if (drag.type === 'MOVE_CAMP_ACTIVITY') {
+      if (!slot.teamId) return
+      const dayActivities = campActivities?.[currentCampId]?.[currentCampDate] ?? []
+      const activity = dayActivities.find((a) => a.id === drag.activityId)
+      if (!activity) return
+      const duration = activity.endMinute - activity.startMinute
+      updateCampActivity(currentCampId, currentCampDate, activity.id, {
+        teamId: slot.teamId,
+        startMinute: slot.startMinute,
+        endMinute: slot.startMinute + duration,
+      })
+      return
+    }
+
     if (drag.type === 'NEW_TRAINING_FROM_HALL') {
       const valid = isWithinAvailability(
         drag.hallId, slot.dayOfWeek,
@@ -158,6 +172,20 @@ function AppInner() {
         <div className="drag-overlay-tile">
           <span style={{ width: 10, height: 10, borderRadius: '50%', background: team.color, display: 'inline-block' }} />
           {team.name}
+        </div>
+      )
+    }
+  }
+  if (activeItem?.type === 'MOVE_CAMP_ACTIVITY') {
+    const dayActivities = campActivities?.[currentCampId]?.[currentCampDate] ?? []
+    const activity = dayActivities.find((a) => a.id === activeItem.activityId)
+    if (activity) {
+      const team = campTeams.find((t) => t.id === activity.teamId)
+      const bg = activity.color || team?.color || '#4f6ef7'
+      overlayContent = (
+        <div className="camp-activity" style={{ background: bg, width: 120, opacity: 0.9 }}>
+          <div className="camp-activity__label">{activity.label}</div>
+          <div className="camp-activity__time">{minutesToTime(activity.startMinute)}–{minutesToTime(activity.endMinute)}</div>
         </div>
       )
     }

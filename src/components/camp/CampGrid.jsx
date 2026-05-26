@@ -1,5 +1,6 @@
 import { minutesToTime } from '../../utils/timeUtils.js'
 import CampActivityBlock from './CampActivityBlock.jsx'
+import CampSlot from './CampSlot.jsx'
 import './Camp.css'
 
 const SLOT_MIN  = 15
@@ -69,9 +70,11 @@ export default function CampGrid({ campTeams, activities, onSlotClick, onActivit
               const isHour = minute % 60 === 0
               const bg = ti % 2 === 0 ? 'var(--color-surface)' : 'var(--color-surface-2)'
               return (
-                <div
+                <CampSlot
                   key={`s-${ti}-${minute}`}
-                  className={`camp-slot${isHour ? ' camp-slot--hour' : ''}`}
+                  teamId={team.id}
+                  startMinute={minute}
+                  isHour={isHour}
                   style={{ gridColumn: timeCol(minute), gridRow: teamRow(ti), background: bg }}
                   onClick={() => onSlotClick?.({ teamId: team.id, startMinute: minute })}
                 />
