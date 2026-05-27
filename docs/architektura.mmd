@@ -1,0 +1,75 @@
+graph TD
+    subgraph Browser["Prohlizec"]
+        subgraph Auth["Autentizace"]
+            AP["AuthProvider\nMicrosoft OIDC"]
+            UR["useRole / useCanEdit"]
+        end
+
+        subgraph State["Stav aplikace"]
+            AC["AppContext\nCRUD akce + data"]
+            USS["useServerStorage\nRedis sync"]
+        end
+
+        subgraph AppMain["App.jsx — DndContext"]
+            SB["Sidebar\nTymy / Haly / Soustredeni"]
+
+            subgraph Schedule["Rozvrh"]
+                CG["CalendarGrid\nhaly jako radky"]
+                TCG["TeamCalendarGrid\ntymy jako radky"]
+            end
+
+            subgraph Camp["Soustredeni"]
+                CV["CampView\nnavigace dnu"]
+                CGR["CampGrid\ntymy x cas"]
+                CAB["CampActivityBlock\ndraggable"]
+                CS["CampSlot\ndroppable"]
+            end
+
+            subgraph Modals["Modaly"]
+                TM["TrainingModal"]
+                CM["CampModal"]
+                CAM["CampActivityModal"]
+                OtherM["TeamModal / HallModal\nUserModal / SeasonModal"]
+            end
+
+            subgraph DragSrc["Drag sources"]
+                TT["TeamTile\nNEW_TRAINING"]
+                HT["HallTile\nNEW_TRAINING_FROM_HALL"]
+                TB["TrainingBlock\nMOVE_TRAINING"]
+            end
+        end
+
+        EX["exportUtils.js\nExcel export"]
+    end
+
+    subgraph Server["Server - Vercel"]
+        API["api/state.js\nserverless"]
+        RD[("Upstash Redis\ndraci-schedule-v7")]
+    end
+
+    AP -->|"user + token"| AppMain
+    AC -->|"useApp()"| AppMain
+    USS <-->|"fetch"| API
+    API <-->|"GET / POST"| RD
+
+    SB -->|"Tymy pohled"| CG
+    SB -->|"Haly pohled"| TCG
+    SB -->|"Soustredeni"| CV
+    CV --> CGR
+    CGR --> CAB
+    CGR --> CS
+
+    TT -.->|"drag"| CG
+    HT -.->|"drag"| TCG
+    TB -.->|"drag"| CG
+    CAB -.->|"drag"| CS
+
+    AppMain -->|"exportCampDay\nexportDailySchedule"| EX
+
+    style Auth fill:#1a3a6b,color:#fff
+    style State fill:#1a4a2e,color:#fff
+    style Schedule fill:#2a3a5b,color:#fff
+    style Camp fill:#3a2a5b,color:#fff
+    style Modals fill:#4a2a2a,color:#fff
+    style DragSrc fill:#2a4a3a,color:#fff
+    style Server fill:#3a3a1a,color:#fff
