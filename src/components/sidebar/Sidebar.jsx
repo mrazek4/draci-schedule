@@ -3,6 +3,7 @@ import { useApp } from '../../context/AppContext.jsx'
 import { useAuth } from '../../auth/AuthProvider.jsx'
 import { useRole, useCanEdit } from '../../auth/useRole.js'
 import TeamList from './TeamList.jsx'
+import TeamTile from './TeamTile.jsx'
 import HallTile from './HallTile.jsx'
 import TemplateTile from '../camp/TemplateTile.jsx'
 import SeasonModal from '../modals/SeasonModal.jsx'
@@ -11,7 +12,7 @@ import { parseExcelTrainings } from '../../utils/importUtils.js'
 import logo from '../../assets/1629729771_club_logo.webp'
 import './Sidebar.css'
 
-export default function Sidebar({ onManageTeams, onManageHalls, onManageUsers, onAddTraining, theme, onToggleTheme, hiddenTeamIds, onToggleTeam, onShowAll, onHideAll, viewMode, onSwitchView, currentCampId, onSelectCamp, onAddCamp, onEditCamp, listMode, onListModeChange, onManageCampTemplates }) {
+export default function Sidebar({ onManageTeams, onManageHalls, onManageUsers, onAddTraining, theme, onToggleTheme, hiddenTeamIds, onToggleTeam, onShowAll, onHideAll, viewMode, onSwitchView, currentCampId, onSelectCamp, onAddCamp, onEditCamp, listMode, onListModeChange, onManageCampTemplates, campPerspective }) {
   const { teams, halls, trainings, seasons, currentSeasonId, setCurrentSeason, addSeason, deleteSeason, importTrainings, addHall, camps, deleteCamp, campActivityTemplates } = useApp()
   const { user, logout } = useAuth()
   const canEdit = useCanEdit()
@@ -151,19 +152,27 @@ export default function Sidebar({ onManageTeams, onManageHalls, onManageUsers, o
               }
             </div>
 
-            {/* Template activities section */}
+            {/* Template / Team tiles depending on camp perspective */}
             <div className="sidebar__section-header" style={{ marginTop: 8 }}>
-              <p className="sidebar__section-title">Šablony aktivit</p>
-              {canEdit && (
+              <p className="sidebar__section-title">
+                {campPerspective === 'templates' ? 'Týmy' : 'Šablony aktivit'}
+              </p>
+              {canEdit && campPerspective !== 'templates' && (
                 <button className="sidebar__season-btn" onClick={onManageCampTemplates} title="Spravovat šablony">⚙</button>
               )}
             </div>
             <div style={{ flex: 1, overflowY: 'auto', padding: '0 4px' }}>
-              {(campActivityTemplates ?? []).length === 0
-                ? <p style={{ fontSize: 12, color: 'var(--color-text-muted)', padding: '4px 8px' }}>Žádné šablony.</p>
-                : (campActivityTemplates ?? []).map((tpl) => (
-                  <TemplateTile key={tpl.id} template={tpl} />
-                ))
+              {campPerspective === 'templates'
+                ? (() => {
+                    const activeCamp = (camps ?? []).find((c) => c.id === currentCampId)
+                    const campTeams  = activeCamp ? teams.filter((t) => activeCamp.teamIds?.includes(t.id)) : []
+                    return campTeams.length === 0
+                      ? <p style={{ fontSize: 12, color: 'var(--color-text-muted)', padding: '4px 8px' }}>Žádné týmy.</p>
+                      : campTeams.map((t) => <TeamTile key={t.id} team={t} isVisible />)
+                  })()
+                : (campActivityTemplates ?? []).length === 0
+                  ? <p style={{ fontSize: 12, color: 'var(--color-text-muted)', padding: '4px 8px' }}>Žádné šablony.</p>
+                  : (campActivityTemplates ?? []).map((tpl) => <TemplateTile key={tpl.id} template={tpl} />)
               }
             </div>
           </>

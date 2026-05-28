@@ -1,6 +1,7 @@
 import { useApp } from '../../context/AppContext.jsx'
 import { exportCampDay } from '../../utils/exportUtils.js'
 import CampGrid from './CampGrid.jsx'
+import CampTemplateGrid from './CampTemplateGrid.jsx'
 import './Camp.css'
 
 const DAY_NAMES  = ['Neděle', 'Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota']
@@ -20,7 +21,7 @@ function shiftDate(dateStr, n) {
   return `${y}-${mo}-${da}`
 }
 
-export default function CampView({ campId, date, onDateChange, onSlotClick, onActivityClick, onBack }) {
+export default function CampView({ campId, date, onDateChange, onSlotClick, onActivityClick, onBack, perspective, onPerspectiveChange }) {
   const { camps, campActivities, teams } = useApp()
 
   const camp = camps?.find((c) => c.id === campId)
@@ -53,34 +54,48 @@ export default function CampView({ campId, date, onDateChange, onSlotClick, onAc
           ← Rozvrh
         </button>
         <span className="camp-header__title">{camp.name}</span>
-        <div className="camp-header__nav">
+
+        {/* Perspective toggle */}
+        <div style={{ display: 'flex', gap: 2, border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', overflow: 'hidden' }}>
           <button
             className="camp-header__nav-btn"
-            disabled={!canGoPrev}
-            onClick={() => onDateChange(shiftDate(currentDate, -1))}
+            style={{ borderRadius: 0, border: 'none', background: perspective === 'teams' ? 'var(--color-accent)' : undefined, color: perspective === 'teams' ? '#fff' : undefined }}
+            onClick={() => onPerspectiveChange('teams')}
           >
-            ←
+            Týmy
           </button>
-          <span className="camp-header__date-label">{formatDate(currentDate)}</span>
           <button
             className="camp-header__nav-btn"
-            disabled={!canGoNext}
-            onClick={() => onDateChange(shiftDate(currentDate, 1))}
+            style={{ borderRadius: 0, border: 'none', background: perspective === 'templates' ? 'var(--color-accent)' : undefined, color: perspective === 'templates' ? '#fff' : undefined }}
+            onClick={() => onPerspectiveChange('templates')}
           >
-            →
+            Šablony
           </button>
         </div>
-        <button className="camp-header__export-btn" onClick={handleExport}>
-          ↓ Export dne
-        </button>
+
+        <div className="camp-header__nav">
+          <button className="camp-header__nav-btn" disabled={!canGoPrev} onClick={() => onDateChange(shiftDate(currentDate, -1))}>←</button>
+          <span className="camp-header__date-label">{formatDate(currentDate)}</span>
+          <button className="camp-header__nav-btn" disabled={!canGoNext} onClick={() => onDateChange(shiftDate(currentDate, 1))}>→</button>
+        </div>
+
+        <button className="camp-header__export-btn" onClick={handleExport}>↓ Export dne</button>
       </div>
 
-      <CampGrid
-        campTeams={campTeams}
-        activities={dayActivities}
-        onSlotClick={onSlotClick}
-        onActivityClick={onActivityClick}
-      />
+      {perspective === 'templates'
+        ? <CampTemplateGrid
+            campTeams={campTeams}
+            activities={dayActivities}
+            onSlotClick={onSlotClick}
+            onActivityClick={onActivityClick}
+          />
+        : <CampGrid
+            campTeams={campTeams}
+            activities={dayActivities}
+            onSlotClick={onSlotClick}
+            onActivityClick={onActivityClick}
+          />
+      }
     </div>
   )
 }

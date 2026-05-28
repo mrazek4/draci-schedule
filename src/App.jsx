@@ -45,6 +45,7 @@ function AppInner() {
   const [showCampModal, setShowCampModal]               = useState(null)
   const [campActivityModal, setCampActivityModal]       = useState(null)
   const [showCampTemplatesModal, setShowCampTemplatesModal] = useState(false)
+  const [campPerspective, setCampPerspective]           = useState('teams')
   const canEdit = useCanEdit()
 
   const activeCamp = camps?.find((c) => c.id === currentCampId)
@@ -91,6 +92,19 @@ function AppInner() {
     if (!slot?.available) return
 
     const drag = active.data.current
+
+    // Team tile dropped on a template row in camp template-perspective
+    if (drag.type === 'NEW_TRAINING' && slot.templateLabel) {
+      setCampActivityModal({
+        prefill: {
+          teamId: drag.teamId,
+          startMinute: slot.startMinute,
+          templateLabel: slot.templateLabel,
+          color: slot.templateColor,
+        },
+      })
+      return
+    }
 
     if (drag.type === 'NEW_TRAINING') {
       if (!slot.hallId) return  // team-row slots don't accept team tiles
@@ -264,6 +278,7 @@ function AppInner() {
             onAddCamp={() => setShowCampModal({})}
             onEditCamp={(camp) => setShowCampModal(camp)}
             onManageCampTemplates={() => setShowCampTemplatesModal(true)}
+            campPerspective={campPerspective}
             listMode={perspective}
             onListModeChange={setPerspective}
           />
@@ -278,6 +293,8 @@ function AppInner() {
               onSlotClick={canEdit ? (prefill) => setCampActivityModal({ prefill }) : null}
               onActivityClick={(activity) => setCampActivityModal({ activity })}
               onBack={() => setViewMode('schedule')}
+              perspective={campPerspective}
+              onPerspectiveChange={setCampPerspective}
             />
         }
       </AppShell>
