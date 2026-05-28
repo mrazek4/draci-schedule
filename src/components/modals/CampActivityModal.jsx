@@ -45,7 +45,7 @@ export default function CampActivityModal({ activity, campId, dateStr, prefill, 
     const start    = timeToMinutes(startTime)
     const end      = timeToMinutes(endTime)
     const fullLabel = buildLabel()
-    if (!fullLabel) return
+    if (!fullLabel) { if (!isEdit) alert('Vyber šablonu aktivity.'); return }
     if (end <= start) { alert('Čas konce musí být po čase začátku.'); return }
 
     const base = { label: fullLabel, startMinute: start, endMinute: end, ...(color ? { color } : {}) }
@@ -97,10 +97,10 @@ export default function CampActivityModal({ activity, campId, dateStr, prefill, 
             </div>
           )}
 
-          {/* Template chip picker — shown in create mode */}
-          {!isEdit && (campActivityTemplates ?? []).length > 0 && (
+          {/* Template chip picker — required in create mode */}
+          {!isEdit && (
             <div className="modal__field">
-              <label className="modal__label">Šablona (volitelně)</label>
+              <label className="modal__label">Šablona</label>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {(campActivityTemplates ?? []).map((tpl) => {
                   const active = selectedTemplate?.label === tpl.label
@@ -129,8 +129,8 @@ export default function CampActivityModal({ activity, campId, dateStr, prefill, 
             </div>
           )}
 
-          {/* Label — sublabel input when template selected, free text otherwise */}
-          {effectiveTemplateLabel ? (
+          {/* Sublabel — always shown in create mode, free label in edit mode */}
+          {!isEdit ? (
             <div className="modal__field">
               <label className="modal__label">Upřesnění (volitelně)</label>
               <input
@@ -139,9 +139,9 @@ export default function CampActivityModal({ activity, campId, dateStr, prefill, 
                 placeholder="např. fotbal, florbal…"
                 value={sublabel}
                 onChange={(e) => setSublabel(e.target.value)}
-                autoFocus
+                disabled={!effectiveTemplateLabel}
               />
-              {sublabel.trim() && (
+              {effectiveTemplateLabel && sublabel.trim() && (
                 <p style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 3 }}>
                   Zobrazí se jako: <strong>{effectiveTemplateLabel}-{sublabel.trim()}</strong>
                 </p>
@@ -153,11 +153,11 @@ export default function CampActivityModal({ activity, campId, dateStr, prefill, 
               <input
                 className="modal__input"
                 type="text"
-                placeholder="Snídaně, Trénink v hale…"
+                placeholder="Název aktivity"
                 value={label}
                 onChange={(e) => setLabel(e.target.value)}
-                autoFocus={!isEdit}
-                required={!effectiveTemplateLabel}
+                autoFocus
+                required
               />
             </div>
           )}
@@ -199,7 +199,11 @@ export default function CampActivityModal({ activity, campId, dateStr, prefill, 
               </button>
             )}
             <button type="button" className="btn btn--ghost" onClick={onClose}>Zrušit</button>
-            <button type="submit" className="btn btn--primary">
+            <button
+              type="submit"
+              className="btn btn--primary"
+              disabled={!isEdit && !effectiveTemplateLabel}
+            >
               {isEdit ? 'Uložit' : (forAllTeams ? `Přidat pro ${campTeams.length} týmů` : 'Přidat')}
             </button>
           </div>
