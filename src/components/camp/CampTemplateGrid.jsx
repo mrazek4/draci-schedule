@@ -16,10 +16,6 @@ function matches(actLabel, tplLabel) {
   return actLabel === tplLabel || actLabel.startsWith(tplLabel + '-')
 }
 
-function sublabelOf(actLabel, tplLabel) {
-  return actLabel.startsWith(tplLabel + '-') ? actLabel.slice(tplLabel.length + 1) : ''
-}
-
 // Phase 1 — merge activities with exactly the same time into one "effective block"
 function mergeByExactTime(activities) {
   const map = new Map()
@@ -73,7 +69,7 @@ function assignLanes(cluster) {
 }
 
 // Renders one effective block (1 or N teams at same time) like a TrainingBlock
-function MergedBlock({ block, campTeams, templateLabel, onClick, posStyle }) {
+function MergedBlock({ block, campTeams, onClick, posStyle }) {
   const [pickerOpen, setPickerOpen] = useState(false)
 
   const teams = block.activities
@@ -91,7 +87,6 @@ function MergedBlock({ block, campTeams, templateLabel, onClick, posStyle }) {
 
   const label = teams.slice(0, 2).map((t) => t.shortName).join('+') +
                 (extra > 0 ? `+${extra}` : '')
-  const sub   = sublabelOf(block.activities[0].label, templateLabel)
 
   function handleClick(e) {
     e.stopPropagation()
@@ -109,7 +104,7 @@ function MergedBlock({ block, campTeams, templateLabel, onClick, posStyle }) {
         style={{ background: bg, pointerEvents: 'all', position: 'absolute', inset: 0 }}
         onClick={handleClick}
       >
-        <div className="camp-activity__label">{label}{sub ? ` · ${sub}` : ''}</div>
+        <div className="camp-activity__label">{label}</div>
         <div className="camp-activity__time">
           {minutesToTime(block.startMinute)}–{minutesToTime(block.endMinute)}
         </div>
@@ -248,7 +243,6 @@ export default function CampTemplateGrid({ campTeams, activities, onSlotClick, o
                         key={block.id}
                         block={block}
                         campTeams={campTeams}
-                        templateLabel={tpl.label}
                         onClick={onActivityClick}
                         posStyle={{
                           left:   `calc(${leftPct}%  + 1px)`,
