@@ -52,8 +52,8 @@ export default function TeamCalendarGrid({ onTrainingClick, onSlotClick }) {
     ...hallAvailabilities.map((a) => a.endMinute),
     ...trainings.map((t) => t.endMinute),
   ]
-  const minTime = Math.floor(Math.min(...allStarts, GRID_START_MINUTE) / 60) * 60
-  const maxTime = Math.ceil(Math.max(...allEnds, GRID_END_MINUTE)     / 60) * 60
+  const minTime = Math.floor(Math.min(...allStarts) / 60) * 60
+  const maxTime = Math.ceil(Math.max(...allEnds)     / 60) * 60
 
   const timeSlots = []
   for (let m = minTime; m < maxTime; m += SLOT_MIN) timeSlots.push(m)
