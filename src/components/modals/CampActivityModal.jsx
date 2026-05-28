@@ -7,17 +7,28 @@ export default function CampActivityModal({ activity, campId, dateStr, prefill, 
   const { addCampActivity, updateCampActivity, deleteCampActivity, campActivityTemplates } = useApp()
   const isEdit = !!activity
 
-  // templateLabel can come from drag (prefill.templateLabel) or from clicking a chip
+  // In edit mode, detect if the existing label matches a template
+  const editMatchTemplate = isEdit
+    ? (campActivityTemplates ?? []).find((t) =>
+        activity.label === t.label || activity.label.startsWith(t.label + '-')
+      ) ?? null
+    : null
+  const editSublabel = editMatchTemplate && activity.label.startsWith(editMatchTemplate.label + '-')
+    ? activity.label.slice(editMatchTemplate.label.length + 1)
+    : ''
+
   const [selectedTemplate, setSelectedTemplate] = useState(
     prefill?.templateLabel
       ? { label: prefill.templateLabel, color: prefill.color }
-      : null
+      : editMatchTemplate
+        ? { label: editMatchTemplate.label, color: editMatchTemplate.color }
+        : null
   )
   const effectiveTemplateLabel = selectedTemplate?.label ?? null
 
   const [teamId,     setTeamId]     = useState(activity?.teamId     ?? prefill?.teamId     ?? campTeams[0]?.id ?? '')
-  const [label,      setLabel]      = useState(activity?.label      ?? '')
-  const [sublabel,   setSublabel]   = useState('')
+  const [label,      setLabel]      = useState(editMatchTemplate ? '' : (activity?.label ?? ''))
+  const [sublabel,   setSublabel]   = useState(editSublabel)
   const [startTime,  setStartTime]  = useState(minutesToTime(activity?.startMinute ?? prefill?.startMinute ?? 480))
   const [endTime,    setEndTime]    = useState(minutesToTime(activity?.endMinute   ?? (prefill?.startMinute ?? 480) + 60))
   const [color,      setColor]      = useState(activity?.color ?? prefill?.color ?? '')
@@ -98,8 +109,8 @@ export default function CampActivityModal({ activity, campId, dateStr, prefill, 
             </div>
           )}
 
-          {/* Template chip picker — required in create mode */}
-          {!isEdit && (
+          {/* Template chip picker — shown in both create and edit mode */}
+          {(campActivityTemplates ?? []).length > 0 && (
             <div className="modal__field">
               <label className="modal__label">Šablona</label>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
