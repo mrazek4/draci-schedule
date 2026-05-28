@@ -12,7 +12,7 @@ import { parseExcelTrainings } from '../../utils/importUtils.js'
 import logo from '../../assets/1629729771_club_logo.webp'
 import './Sidebar.css'
 
-export default function Sidebar({ onManageTeams, onManageHalls, onManageUsers, onAddTraining, theme, onToggleTheme, hiddenTeamIds, onToggleTeam, onShowAll, onHideAll, viewMode, onSwitchView, currentCampId, onSelectCamp, onAddCamp, onEditCamp, listMode, onListModeChange, onManageCampTemplates, campPerspective }) {
+export default function Sidebar({ onManageTeams, onManageHalls, onManageUsers, onAddTraining, theme, onToggleTheme, hiddenTeamIds, onToggleTeam, onShowAll, onHideAll, viewMode, onSwitchView, currentCampId, onSelectCamp, onAddCamp, onEditCamp, listMode, onListModeChange, onManageCampTemplates, campPerspective, onCampPerspectiveChange }) {
   const { teams, halls, trainings, seasons, currentSeasonId, setCurrentSeason, addSeason, deleteSeason, importTrainings, addHall, camps, deleteCamp, campActivityTemplates } = useApp()
   const { user, logout } = useAuth()
   const canEdit = useCanEdit()
@@ -152,11 +152,18 @@ export default function Sidebar({ onManageTeams, onManageHalls, onManageUsers, o
               }
             </div>
 
-            {/* Template / Team tiles depending on camp perspective */}
-            <div className="sidebar__section-header" style={{ marginTop: 8 }}>
-              <p className="sidebar__section-title">
-                {campPerspective === 'templates' ? 'Týmy' : 'Šablony aktivit'}
-              </p>
+            {/* Perspective toggle — mirrors Týmy/Haly in schedule */}
+            <div className="sidebar__section-header" style={{ marginTop: 4 }}>
+              <div style={{ display: 'flex', gap: 0 }}>
+                <button
+                  className={`sidebar__filter-btn${campPerspective === 'teams' ? ' sidebar__filter-btn--active' : ''}`}
+                  onClick={() => onCampPerspectiveChange('teams')}
+                >Týmy</button>
+                <button
+                  className={`sidebar__filter-btn${campPerspective === 'templates' ? ' sidebar__filter-btn--active' : ''}`}
+                  onClick={() => onCampPerspectiveChange('templates')}
+                >Šablony</button>
+              </div>
               {canEdit && campPerspective !== 'templates' && (
                 <button className="sidebar__season-btn" onClick={onManageCampTemplates} title="Spravovat šablony">⚙</button>
               )}

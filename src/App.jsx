@@ -279,6 +279,7 @@ function AppInner() {
             onEditCamp={(camp) => setShowCampModal(camp)}
             onManageCampTemplates={() => setShowCampTemplatesModal(true)}
             campPerspective={campPerspective}
+            onCampPerspectiveChange={setCampPerspective}
             listMode={perspective}
             onListModeChange={setPerspective}
           />
@@ -294,7 +295,6 @@ function AppInner() {
               onActivityClick={(activity) => setCampActivityModal({ activity })}
               onBack={() => setViewMode('schedule')}
               perspective={campPerspective}
-              onPerspectiveChange={setCampPerspective}
             />
         }
       </AppShell>
