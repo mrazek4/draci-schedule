@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useApp } from '../../context/AppContext.jsx'
 import { minutesToTime, timeToMinutes } from '../../utils/timeUtils.js'
 import './Modal.css'
@@ -7,28 +7,28 @@ export default function CampActivityModal({ activity, campId, dateStr, prefill, 
   const { addCampActivity, updateCampActivity, deleteCampActivity, campActivityTemplates } = useApp()
   const isEdit = !!activity
 
-  // In edit mode, detect if the existing label matches a template
-  const editMatchTemplate = isEdit
-    ? (campActivityTemplates ?? []).find((t) =>
-        activity.label === t.label || activity.label.startsWith(t.label + '-')
-      ) ?? null
-    : null
-  const editSublabel = editMatchTemplate && activity.label.startsWith(editMatchTemplate.label + '-')
-    ? activity.label.slice(editMatchTemplate.label.length + 1)
-    : ''
-
   const [selectedTemplate, setSelectedTemplate] = useState(
-    prefill?.templateLabel
-      ? { label: prefill.templateLabel, color: prefill.color }
-      : editMatchTemplate
-        ? { label: editMatchTemplate.label, color: editMatchTemplate.color }
-        : null
+    prefill?.templateLabel ? { label: prefill.templateLabel, color: prefill.color } : null
   )
   const effectiveTemplateLabel = selectedTemplate?.label ?? null
 
-  const [teamId,     setTeamId]     = useState(activity?.teamId     ?? prefill?.teamId     ?? campTeams[0]?.id ?? '')
-  const [label,      setLabel]      = useState(editMatchTemplate ? '' : (activity?.label ?? ''))
-  const [sublabel,   setSublabel]   = useState(editSublabel)
+  const [teamId,   setTeamId]   = useState(activity?.teamId  ?? prefill?.teamId ?? campTeams[0]?.id ?? '')
+  const [label,    setLabel]    = useState(activity?.label    ?? '')
+  const [sublabel, setSublabel] = useState('')
+
+  // In edit mode: once templates are available, detect matching template + sublabel
+  useEffect(() => {
+    if (!isEdit || !campActivityTemplates?.length) return
+    const match = campActivityTemplates.find((t) =>
+      activity.label === t.label || activity.label.startsWith(t.label + '-')
+    )
+    if (!match) return
+    setSelectedTemplate({ label: match.label, color: match.color })
+    setLabel('')
+    if (activity.label.startsWith(match.label + '-')) {
+      setSublabel(activity.label.slice(match.label.length + 1))
+    }
+  }, [campActivityTemplates])
   const [startTime,  setStartTime]  = useState(minutesToTime(activity?.startMinute ?? prefill?.startMinute ?? 480))
   const [endTime,    setEndTime]    = useState(minutesToTime(activity?.endMinute   ?? (prefill?.startMinute ?? 480) + 60))
   const [color,      setColor]      = useState(activity?.color ?? prefill?.color ?? '')
