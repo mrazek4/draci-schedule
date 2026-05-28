@@ -133,7 +133,7 @@
 .camp-team-label {
   position: sticky;
   left: 0;
-  z-index: 3;
+  z-index: 10;
   display: flex;
   align-items: center;
   gap: 8px;
