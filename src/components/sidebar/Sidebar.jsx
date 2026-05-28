@@ -4,14 +4,15 @@ import { useAuth } from '../../auth/AuthProvider.jsx'
 import { useRole, useCanEdit } from '../../auth/useRole.js'
 import TeamList from './TeamList.jsx'
 import HallTile from './HallTile.jsx'
+import TemplateTile from '../camp/TemplateTile.jsx'
 import SeasonModal from '../modals/SeasonModal.jsx'
 import { exportToExcel } from '../../utils/exportUtils.js'
 import { parseExcelTrainings } from '../../utils/importUtils.js'
 import logo from '../../assets/1629729771_club_logo.webp'
 import './Sidebar.css'
 
-export default function Sidebar({ onManageTeams, onManageHalls, onManageUsers, onAddTraining, theme, onToggleTheme, hiddenTeamIds, onToggleTeam, onShowAll, onHideAll, viewMode, onSwitchView, currentCampId, onSelectCamp, onAddCamp, onEditCamp, listMode, onListModeChange }) {
-  const { teams, halls, trainings, seasons, currentSeasonId, setCurrentSeason, addSeason, deleteSeason, importTrainings, addHall, camps, deleteCamp } = useApp()
+export default function Sidebar({ onManageTeams, onManageHalls, onManageUsers, onAddTraining, theme, onToggleTheme, hiddenTeamIds, onToggleTeam, onShowAll, onHideAll, viewMode, onSwitchView, currentCampId, onSelectCamp, onAddCamp, onEditCamp, listMode, onListModeChange, onManageCampTemplates }) {
+  const { teams, halls, trainings, seasons, currentSeasonId, setCurrentSeason, addSeason, deleteSeason, importTrainings, addHall, camps, deleteCamp, campActivityTemplates } = useApp()
   const { user, logout } = useAuth()
   const canEdit = useCanEdit()
   const role    = useRole()
@@ -106,7 +107,7 @@ export default function Sidebar({ onManageTeams, onManageHalls, onManageUsers, o
               <p className="sidebar__section-title">Soustředění</p>
               {canEdit && <button className="sidebar__season-btn" onClick={onAddCamp} title="Přidat soustředění">+</button>}
             </div>
-            <div style={{ flex: 1, overflowY: 'auto', padding: '0 8px' }}>
+            <div style={{ overflowY: 'auto', padding: '0 8px', maxHeight: 180 }}>
               {(camps ?? []).length === 0
                 ? <p style={{ fontSize: 12, color: 'var(--color-text-muted)', padding: '8px 4px' }}>Žádná soustředění.</p>
                 : (camps ?? []).map((camp) => (
@@ -146,6 +147,22 @@ export default function Sidebar({ onManageTeams, onManageHalls, onManageUsers, o
                       >✕</button>
                     )}
                   </div>
+                ))
+              }
+            </div>
+
+            {/* Template activities section */}
+            <div className="sidebar__section-header" style={{ marginTop: 8 }}>
+              <p className="sidebar__section-title">Šablony aktivit</p>
+              {canEdit && (
+                <button className="sidebar__season-btn" onClick={onManageCampTemplates} title="Spravovat šablony">⚙</button>
+              )}
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '0 4px' }}>
+              {(campActivityTemplates ?? []).length === 0
+                ? <p style={{ fontSize: 12, color: 'var(--color-text-muted)', padding: '4px 8px' }}>Žádné šablony.</p>
+                : (campActivityTemplates ?? []).map((tpl) => (
+                  <TemplateTile key={tpl.id} template={tpl} />
                 ))
               }
             </div>

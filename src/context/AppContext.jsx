@@ -50,6 +50,10 @@ export function AppProvider({ children }) {
       // Migrate missing camps
       if (next.camps === undefined) next = { ...next, camps: [], campActivities: {} }
 
+      // Migrate missing camp activity templates
+      if (next.campActivityTemplates === undefined)
+        next = { ...next, campActivityTemplates: defaultState.campActivityTemplates }
+
       // Migrate missing userRoles + bootstrap admin from env var
       if (next.userRoles === undefined) {
         next = { ...next, userRoles: defaultState.userRoles }
@@ -355,6 +359,28 @@ export function AppProvider({ children }) {
     })
   }, [setState])
 
+  // --- Camp activity templates ---
+  const addCampActivityTemplate = useCallback((tpl) => {
+    setState((s) => ({
+      ...s,
+      campActivityTemplates: [...(s.campActivityTemplates ?? []), { id: crypto.randomUUID().slice(0, 8), ...tpl }],
+    }))
+  }, [setState])
+
+  const updateCampActivityTemplate = useCallback((id, patch) => {
+    setState((s) => ({
+      ...s,
+      campActivityTemplates: (s.campActivityTemplates ?? []).map((t) => (t.id === id ? { ...t, ...patch } : t)),
+    }))
+  }, [setState])
+
+  const deleteCampActivityTemplate = useCallback((id) => {
+    setState((s) => ({
+      ...s,
+      campActivityTemplates: (s.campActivityTemplates ?? []).filter((t) => t.id !== id),
+    }))
+  }, [setState])
+
   // --- Week navigation ---
   const setWeekOffset = useCallback((offset) => update({ weekOffset: offset }), [update])
 
@@ -370,6 +396,7 @@ export function AppProvider({ children }) {
     addSeason, deleteSeason, setCurrentSeason, setTrainingsForSeason, importTrainings,
     setUserRole, removeUserRole,
     addCamp, updateCamp, deleteCamp, addCampActivity, updateCampActivity, deleteCampActivity,
+    addCampActivityTemplate, updateCampActivityTemplate, deleteCampActivityTemplate,
     setWeekOffset,
   }
 

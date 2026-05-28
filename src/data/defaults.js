@@ -57,4 +57,13 @@ export const defaultState = {
   userRoles: {},
   camps: [],
   campActivities: {},
+  campActivityTemplates: [
+    { id: 'tpl-snidane', label: 'Snídaně',  color: '#e67e22' },
+    { id: 'tpl-obed',    label: 'Oběd',     color: '#e67e22' },
+    { id: 'tpl-vecere',  label: 'Večeře',   color: '#e67e22' },
+    { id: 'tpl-hala',    label: 'Hala',     color: '#2980b9' },
+    { id: 'tpl-venku',   label: 'Venku',    color: '#27ae60' },
+    { id: 'tpl-voda',    label: 'Voda',     color: '#1abc9c' },
+    { id: 'tpl-pauza',   label: 'Pauza',    color: '#95a5a6' },
+  ],
 }

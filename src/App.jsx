@@ -22,6 +22,7 @@ import HallModal from './components/modals/HallModal.jsx'
 import UserModal from './components/modals/UserModal.jsx'
 import CampModal from './components/modals/CampModal.jsx'
 import CampActivityModal from './components/modals/CampActivityModal.jsx'
+import CampActivityTemplatesModal from './components/modals/CampActivityTemplatesModal.jsx'
 import { minutesToTime, SLOT_MINUTES } from './utils/timeUtils.js'
 import { isWithinAvailability } from './utils/calendarUtils.js'
 
@@ -41,8 +42,9 @@ function AppInner() {
   const [perspective, setPerspective]             = useState('teams')
   const [currentCampId, setCurrentCampId]         = useState(null)
   const [currentCampDate, setCurrentCampDate]     = useState(null)
-  const [showCampModal, setShowCampModal]         = useState(null)
-  const [campActivityModal, setCampActivityModal] = useState(null)
+  const [showCampModal, setShowCampModal]               = useState(null)
+  const [campActivityModal, setCampActivityModal]       = useState(null)
+  const [showCampTemplatesModal, setShowCampTemplatesModal] = useState(false)
   const canEdit = useCanEdit()
 
   const activeCamp = camps?.find((c) => c.id === currentCampId)
@@ -144,6 +146,19 @@ function AppInner() {
       return
     }
 
+    if (drag.type === 'NEW_CAMP_ACTIVITY_FROM_TEMPLATE') {
+      if (!slot.teamId) return
+      setCampActivityModal({
+        prefill: {
+          teamId: slot.teamId,
+          startMinute: slot.startMinute,
+          templateLabel: drag.label,
+          color: drag.color,
+        },
+      })
+      return
+    }
+
     if (drag.type === 'NEW_TRAINING_FROM_HALL') {
       const valid = isWithinAvailability(
         drag.hallId, slot.dayOfWeek,
@@ -176,6 +191,14 @@ function AppInner() {
         </div>
       )
     }
+  }
+  if (activeItem?.type === 'NEW_CAMP_ACTIVITY_FROM_TEMPLATE') {
+    overlayContent = (
+      <div className="drag-overlay-tile">
+        <span style={{ width: 10, height: 10, borderRadius: '50%', background: activeItem.color ?? '#888', display: 'inline-block' }} />
+        {activeItem.label}
+      </div>
+    )
   }
   if (activeItem?.type === 'MOVE_CAMP_ACTIVITY') {
     const dayActivities = campActivities?.[currentCampId]?.[currentCampDate ?? activeCamp?.startDate] ?? []
@@ -240,6 +263,7 @@ function AppInner() {
             onSelectCamp={(id) => { setCurrentCampId(id); setCurrentCampDate(null) }}
             onAddCamp={() => setShowCampModal({})}
             onEditCamp={(camp) => setShowCampModal(camp)}
+            onManageCampTemplates={() => setShowCampTemplatesModal(true)}
             listMode={perspective}
             onListModeChange={setPerspective}
           />
@@ -279,12 +303,15 @@ function AppInner() {
           onSaved={() => setShowCampModal(null)}
         />
       )}
-      {campActivityModal !== null && currentCampId && currentCampDate && (
+      {showCampTemplatesModal && (
+        <CampActivityTemplatesModal onClose={() => setShowCampTemplatesModal(false)} />
+      )}
+      {campActivityModal !== null && currentCampId && (currentCampDate ?? activeCamp?.startDate) && (
         <CampActivityModal
           activity={campActivityModal.activity}
           prefill={campActivityModal.prefill}
           campId={currentCampId}
-          dateStr={currentCampDate}
+          dateStr={currentCampDate ?? activeCamp?.startDate}
           campTeams={campTeams}
           onClose={() => setCampActivityModal(null)}
         />
