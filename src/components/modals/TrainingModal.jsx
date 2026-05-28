@@ -34,10 +34,16 @@ export default function TrainingModal({ training, prefill = {}, onClose, onCopy 
     const endMinute   = timeToMinutes(endTime)
     if (endMinute <= startMinute) { setError('Čas konce musí být po čase začátku.'); return null }
     if (endMinute - startMinute < 15) { setError('Trénink musí trvat alespoň 15 minut.'); return null }
-    const dow = isCreate ? Number(dayOfWeek) : training.dayOfWeek
-    if (!isWithinAvailability(activeHallId, dow, startMinute, endMinute, hallAvailabilities)) {
-      setError(`Hala ${hall?.name ?? ''} v tomto čase není dostupná.`)
-      return null
+    // In edit mode, only re-check hall availability when the user changed the time
+    const timeChanged = !isCreate
+      ? (startMinute !== training.startMinute || endMinute !== training.endMinute)
+      : true
+    if (timeChanged) {
+      const dow = isCreate ? Number(dayOfWeek) : training.dayOfWeek
+      if (!isWithinAvailability(activeHallId, dow, startMinute, endMinute, hallAvailabilities)) {
+        setError(`Hala ${hall?.name ?? ''} v tomto čase není dostupná.`)
+        return null
+      }
     }
     setError(null)
     return {
