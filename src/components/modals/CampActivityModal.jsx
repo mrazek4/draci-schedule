@@ -4,23 +4,38 @@ import { minutesToTime, timeToMinutes } from '../../utils/timeUtils.js'
 import './Modal.css'
 
 export default function CampActivityModal({ activity, campId, dateStr, prefill, campTeams, onClose }) {
-  const { addCampActivity, updateCampActivity, deleteCampActivity } = useApp()
+  const { addCampActivity, updateCampActivity, deleteCampActivity, campActivityTemplates } = useApp()
   const isEdit = !!activity
 
-  // When opened from a template drag, prefill.templateLabel is set
-  const templateLabel = prefill?.templateLabel ?? null
+  // templateLabel can come from drag (prefill.templateLabel) or from clicking a chip
+  const [selectedTemplate, setSelectedTemplate] = useState(
+    prefill?.templateLabel
+      ? { label: prefill.templateLabel, color: prefill.color }
+      : null
+  )
+  const effectiveTemplateLabel = selectedTemplate?.label ?? null
 
   const [teamId,     setTeamId]     = useState(activity?.teamId     ?? prefill?.teamId     ?? campTeams[0]?.id ?? '')
-  const [label,      setLabel]      = useState(activity?.label      ?? (templateLabel ? '' : ''))
+  const [label,      setLabel]      = useState(activity?.label      ?? '')
   const [sublabel,   setSublabel]   = useState('')
   const [startTime,  setStartTime]  = useState(minutesToTime(activity?.startMinute ?? prefill?.startMinute ?? 480))
   const [endTime,    setEndTime]    = useState(minutesToTime(activity?.endMinute   ?? (prefill?.startMinute ?? 480) + 60))
   const [color,      setColor]      = useState(activity?.color ?? prefill?.color ?? '')
   const [forAllTeams, setForAllTeams] = useState(false)
 
+  function selectTemplate(tpl) {
+    if (selectedTemplate?.label === tpl.label) {
+      setSelectedTemplate(null)
+      if (!color) setColor('')
+    } else {
+      setSelectedTemplate(tpl)
+      if (!color) setColor(tpl.color ?? '')
+    }
+  }
+
   function buildLabel() {
-    if (templateLabel) {
-      return sublabel.trim() ? `${templateLabel}-${sublabel.trim()}` : templateLabel
+    if (effectiveTemplateLabel) {
+      return sublabel.trim() ? `${effectiveTemplateLabel}-${sublabel.trim()}` : effectiveTemplateLabel
     }
     return label.trim()
   }
@@ -82,37 +97,56 @@ export default function CampActivityModal({ activity, campId, dateStr, prefill, 
             </div>
           )}
 
-          {/* Label — chip when from template, text input otherwise */}
-          {templateLabel ? (
-            <>
-              <div className="modal__field">
-                <label className="modal__label">Šablona</label>
-                <div style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 6,
-                  padding: '4px 10px', borderRadius: 'var(--radius-sm)',
-                  background: color || 'var(--color-accent)', color: '#fff',
-                  fontSize: 13, fontWeight: 700,
-                }}>
-                  {templateLabel}
-                </div>
+          {/* Template chip picker — shown in create mode */}
+          {!isEdit && (campActivityTemplates ?? []).length > 0 && (
+            <div className="modal__field">
+              <label className="modal__label">Šablona (volitelně)</label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {(campActivityTemplates ?? []).map((tpl) => {
+                  const active = selectedTemplate?.label === tpl.label
+                  return (
+                    <button
+                      key={tpl.id}
+                      type="button"
+                      onClick={() => selectTemplate(tpl)}
+                      style={{
+                        padding: '4px 10px',
+                        borderRadius: 'var(--radius-sm)',
+                        border: `2px solid ${active ? tpl.color ?? 'var(--color-accent)' : 'var(--color-border)'}`,
+                        background: active ? (tpl.color ?? 'var(--color-accent)') : 'var(--color-surface-2)',
+                        color: active ? '#fff' : 'var(--color-text)',
+                        fontSize: 12,
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        transition: 'all 0.12s',
+                      }}
+                    >
+                      {tpl.label}
+                    </button>
+                  )
+                })}
               </div>
-              <div className="modal__field">
-                <label className="modal__label">Upřesnění (volitelně)</label>
-                <input
-                  className="modal__input"
-                  type="text"
-                  placeholder="např. fotbal, florbal…"
-                  value={sublabel}
-                  onChange={(e) => setSublabel(e.target.value)}
-                  autoFocus
-                />
-                {sublabel.trim() && (
-                  <p style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 3 }}>
-                    Zobrazí se jako: <strong>{templateLabel}-{sublabel.trim()}</strong>
-                  </p>
-                )}
-              </div>
-            </>
+            </div>
+          )}
+
+          {/* Label — sublabel input when template selected, free text otherwise */}
+          {effectiveTemplateLabel ? (
+            <div className="modal__field">
+              <label className="modal__label">Upřesnění (volitelně)</label>
+              <input
+                className="modal__input"
+                type="text"
+                placeholder="např. fotbal, florbal…"
+                value={sublabel}
+                onChange={(e) => setSublabel(e.target.value)}
+                autoFocus
+              />
+              {sublabel.trim() && (
+                <p style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 3 }}>
+                  Zobrazí se jako: <strong>{effectiveTemplateLabel}-{sublabel.trim()}</strong>
+                </p>
+              )}
+            </div>
           ) : (
             <div className="modal__field">
               <label className="modal__label">Aktivita</label>
@@ -122,8 +156,8 @@ export default function CampActivityModal({ activity, campId, dateStr, prefill, 
                 placeholder="Snídaně, Trénink v hale…"
                 value={label}
                 onChange={(e) => setLabel(e.target.value)}
-                autoFocus
-                required
+                autoFocus={!isEdit}
+                required={!effectiveTemplateLabel}
               />
             </div>
           )}
