@@ -141,8 +141,8 @@ export default function CampActivityModal({ activity, campId, dateStr, prefill, 
             </div>
           )}
 
-          {/* Sublabel — always shown in create mode, free label in edit mode */}
-          {!isEdit ? (
+          {/* Upřesnění — when template selected; otherwise raw label field (edit) or disabled hint (create) */}
+          {effectiveTemplateLabel ? (
             <div className="modal__field">
               <label className="modal__label">Upřesnění (volitelně)</label>
               <input
@@ -151,15 +151,14 @@ export default function CampActivityModal({ activity, campId, dateStr, prefill, 
                 placeholder="např. fotbal, florbal…"
                 value={sublabel}
                 onChange={(e) => setSublabel(e.target.value)}
-                disabled={!effectiveTemplateLabel}
               />
-              {effectiveTemplateLabel && sublabel.trim() && (
+              {sublabel.trim() && (
                 <p style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 3 }}>
                   Zobrazí se jako: <strong>{effectiveTemplateLabel}-{sublabel.trim()}</strong>
                 </p>
               )}
             </div>
-          ) : (
+          ) : isEdit ? (
             <div className="modal__field">
               <label className="modal__label">Aktivita</label>
               <input
@@ -170,6 +169,18 @@ export default function CampActivityModal({ activity, campId, dateStr, prefill, 
                 onChange={(e) => setLabel(e.target.value)}
                 autoFocus
                 required
+              />
+            </div>
+          ) : (
+            <div className="modal__field">
+              <label className="modal__label">Upřesnění (volitelně)</label>
+              <input
+                className="modal__input"
+                type="text"
+                placeholder="Nejprve vyber šablonu…"
+                value={sublabel}
+                onChange={(e) => setSublabel(e.target.value)}
+                disabled
               />
             </div>
           )}
