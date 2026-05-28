@@ -21,6 +21,7 @@ export default function CampActivityModal({ activity, campId, dateStr, prefill, 
   const [startTime,  setStartTime]  = useState(minutesToTime(activity?.startMinute ?? prefill?.startMinute ?? 480))
   const [endTime,    setEndTime]    = useState(minutesToTime(activity?.endMinute   ?? (prefill?.startMinute ?? 480) + 60))
   const [color,      setColor]      = useState(activity?.color ?? prefill?.color ?? '')
+  const [note,       setNote]       = useState(activity?.note ?? '')
   const [forAllTeams, setForAllTeams] = useState(false)
 
   function selectTemplate(tpl) {
@@ -48,7 +49,7 @@ export default function CampActivityModal({ activity, campId, dateStr, prefill, 
     if (!fullLabel) { if (!isEdit) alert('Vyber šablonu aktivity.'); return }
     if (end <= start) { alert('Čas konce musí být po čase začátku.'); return }
 
-    const base = { label: fullLabel, startMinute: start, endMinute: end, ...(color ? { color } : {}) }
+    const base = { label: fullLabel, startMinute: start, endMinute: end, note, ...(color ? { color } : {}) }
 
     if (isEdit) {
       updateCampActivity(campId, dateStr, activity.id, { ...base, teamId })
@@ -171,6 +172,16 @@ export default function CampActivityModal({ activity, campId, dateStr, prefill, 
               <label className="modal__label">Do</label>
               <input className="modal__input" type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} required />
             </div>
+          </div>
+
+          <div className="modal__field">
+            <label className="modal__label">Poznámka (volitelně)</label>
+            <textarea
+              className="modal__textarea"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="Volitelná poznámka…"
+            />
           </div>
 
           <div className="modal__field">
