@@ -2,11 +2,13 @@ import { useState } from 'react'
 import { useApp } from '../../context/AppContext.jsx'
 import './Modal.css'
 
+// Formulář pro vytvoření nebo editaci týmu (název, zkratka, barva)
 function TeamForm({ initial, onSave, onCancel }) {
   const [name, setName]           = useState(initial?.name ?? '')
   const [shortName, setShortName] = useState(initial?.shortName ?? '')
   const [color, setColor]         = useState(initial?.color ?? '#4f6ef7')
 
+  // Validuje a odešle data formuláře týmu
   function handleSubmit(e) {
     e.preventDefault()
     if (!name.trim()) return
@@ -40,6 +42,7 @@ function TeamForm({ initial, onSave, onCancel }) {
   )
 }
 
+// Modal se seznamem týmů a možností přidání, editace nebo smazání
 export default function TeamModal({ onClose }) {
   const { teams, addTeam, updateTeam, deleteTeam } = useApp()
   const [editing, setEditing] = useState(null)

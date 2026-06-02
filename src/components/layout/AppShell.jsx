@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import './AppShell.css'
 
+// Layout komponenta: sidebar + hlavní obsah s hamburger tlačítkem na mobilech
 export default function AppShell({ sidebar, children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const close = () => setSidebarOpen(false)

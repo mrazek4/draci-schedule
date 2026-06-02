@@ -2,6 +2,7 @@ import { useDraggable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
 import { useCanEdit } from '../../auth/useRole.js'
 
+// Přetahovatelná dlaždice haly v sidebaru; přetažením na slot vytvoří trénink
 export default function HallTile({ hall }) {
   const canEdit = useCanEdit()
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({

@@ -5,6 +5,7 @@ import './Modal.css'
 
 const DAY_NAMES = ['Po', 'Út', 'St', 'Čt', 'Pá', 'So', 'Ne']
 
+// Editor dostupnosti haly: přidávání a mazání časových oken pro jednotlivé dny
 function AvailabilityEditor({ hallId, onClose }) {
   const { hallAvailabilities, setHallAvailabilities } = useApp()
   const existing = hallAvailabilities.filter((a) => a.hallId === hallId)
@@ -18,18 +19,22 @@ function AvailabilityEditor({ hallId, onClose }) {
     }))
   )
 
+  // Přidá nový prázdný řádek dostupnosti
   function addRow() {
     setRows((r) => [...r, { id: crypto.randomUUID(), dayOfWeek: 0, start: '15:00', end: '22:00' }])
   }
 
+  // Odstraní řádek dostupnosti podle ID
   function removeRow(id) {
     setRows((r) => r.filter((row) => row.id !== id))
   }
 
+  // Aktualizuje pole (den, čas od/do) v daném řádku dostupnosti
   function updateRow(id, field, value) {
     setRows((r) => r.map((row) => (row.id === id ? { ...row, [field]: value } : row)))
   }
 
+  // Uloží dostupnosti haly a zavře editor
   function handleSave() {
     const availabilities = rows.map((row) => ({
       id: row.id,
@@ -70,11 +75,13 @@ function AvailabilityEditor({ hallId, onClose }) {
   )
 }
 
+// Formulář pro vytvoření nebo editaci haly (název, kód, barva)
 function HallForm({ initial, onSave, onCancel }) {
   const [name, setName]   = useState(initial?.name ?? '')
   const [color, setColor] = useState(initial?.color ?? '#4f6ef7')
   const [code, setCode]   = useState(initial?.code ?? '')
 
+  // Validuje a odešle data formuláře haly
   function handleSubmit(e) {
     e.preventDefault()
     if (!name.trim()) return
@@ -113,6 +120,7 @@ function HallForm({ initial, onSave, onCancel }) {
   )
 }
 
+// Modal se seznamem hal a možností editace dostupnosti, úpravy nebo smazání
 export default function HallModal({ onClose }) {
   const { halls, addHall, updateHall, deleteHall } = useApp()
   const [editing, setEditing]     = useState(null)

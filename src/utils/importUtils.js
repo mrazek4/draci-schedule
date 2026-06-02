@@ -4,6 +4,7 @@ const DAY_MAP = {
   PO: 0, UT: 1, ÚT: 1, ST: 2, CT: 3, ČT: 3, PA: 4, PÁ: 4, SO: 5, NE: 6,
 }
 
+// Parsuje čas z buňky Excelu (formát HH:MM nebo desetinné číslo); vrátí minuty od půlnoci
 function parseCellTime(cell) {
   if (!cell) return null
   const src = cell.w || (typeof cell.v === 'string' ? cell.v : null)
@@ -17,12 +18,14 @@ function parseCellTime(cell) {
   return null
 }
 
+// Načte textový obsah buňky Excelu na dané pozici (řádek, sloupec)
 function getCellText(ws, r, c) {
   const cell = ws[XLSX.utils.encode_cell({ r, c })]
   if (!cell) return null
   return (cell.w ?? (cell.v != null ? String(cell.v) : null))?.trim() ?? null
 }
 
+// Najde halu podle kódu nebo části názvu (case-insensitive)
 function findHall(value, halls) {
   const v = String(value || '').trim()
   if (!v) return null
@@ -32,6 +35,7 @@ function findHall(value, halls) {
   return halls.find((h) => h.name.toLowerCase().includes(lower) || lower.includes(h.name.toLowerCase())) ?? null
 }
 
+// Najde tým podle zkratky (case-insensitive)
 function findTeam(value, teams) {
   if (!value) return null
   const abbr = String(value).trim()
@@ -39,6 +43,7 @@ function findTeam(value, teams) {
   return teams.find((t) => t.shortName.toUpperCase() === abbr.toUpperCase()) ?? null
 }
 
+// Parsuje tréninky z Excel souboru; vrátí Promise se seznamem tréninků a neznámými halami
 export function parseExcelTrainings(file, teams, halls) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()

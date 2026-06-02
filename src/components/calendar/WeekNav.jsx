@@ -1,6 +1,7 @@
 import { useApp } from '../../context/AppContext.jsx'
 import { formatWeekRange } from '../../utils/timeUtils.js'
 
+// Navigační prvek pro přepínání týdnů (předchozí / tento / další) s rozsahem dat
 export default function WeekNav() {
   const { weekOffset, setWeekOffset } = useApp()
 

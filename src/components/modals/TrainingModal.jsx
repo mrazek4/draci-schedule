@@ -7,6 +7,7 @@ import './Modal.css'
 
 const DAY_NAMES = ['Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek']
 
+// Modal pro vytvoření nebo editaci tréninku (hala, den, čas, týmy, poznámka)
 export default function TrainingModal({ training, prefill = {}, onClose, onCopy }) {
   const { teams, halls, hallAvailabilities, addTraining, updateTraining, deleteTraining } = useApp()
   const canEdit  = useCanEdit()
@@ -28,6 +29,7 @@ export default function TrainingModal({ training, prefill = {}, onClose, onCopy 
   const activeHallId = isCreate ? hallId : training.hallId
   const hall = halls.find((h) => h.id === activeHallId)
 
+  // Validuje formulář; vrátí {startMinute, endMinute, teamIds} nebo null při chybě
   function validate() {
     if (!teamId1) { setError('Vyber alespoň jeden tým.'); return null }
     const startMinute = timeToMinutes(startTime)
@@ -53,6 +55,7 @@ export default function TrainingModal({ training, prefill = {}, onClose, onCopy 
     }
   }
 
+  // Uloží nebo vytvoří trénink po úspěšné validaci a zavře modal
   function handleSave() {
     const result = validate()
     if (!result) return
@@ -76,6 +79,7 @@ export default function TrainingModal({ training, prefill = {}, onClose, onCopy 
     onClose()
   }
 
+  // Smaže trénink a zavře modal
   function handleDelete() {
     deleteTraining(training.id)
     onClose()

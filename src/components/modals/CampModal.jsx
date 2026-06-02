@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useApp } from '../../context/AppContext.jsx'
 import './Modal.css'
 
+// Modal pro vytvoření nebo editaci soustředění (název, data, výběr týmů)
 export default function CampModal({ camp, onClose, onSaved }) {
   const { teams, addCamp, updateCamp } = useApp()
   const isEdit = !!camp
@@ -11,10 +12,12 @@ export default function CampModal({ camp, onClose, onSaved }) {
   const [endDate,   setEndDate]   = useState(camp?.endDate   ?? '')
   const [teamIds,   setTeamIds]   = useState(camp?.teamIds   ?? [])
 
+  // Přepne výběr týmu (přidá nebo odebere z teamIds)
   function toggleTeam(id) {
     setTeamIds((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id])
   }
 
+  // Validuje a uloží nebo vytvoří soustředění
   function handleSubmit(e) {
     e.preventDefault()
     if (!name.trim() || !startDate || !endDate) return

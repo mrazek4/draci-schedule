@@ -15,6 +15,7 @@ const HDR_H    = 32          // px – time header row
 const DAY_NAMES = ['Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota', 'Neděle']
 const DAY_SHORT = ['PO', 'ÚT', 'ST', 'ČT', 'PÁ', 'SO', 'NE']
 
+// Horizontální CSS grid s řádky (den × hala) a sloupci (čas); zobrazuje tréninky a drop sloty
 export default function CalendarGrid({ onTrainingClick, onSlotClick, hiddenTeamIds = [] }) {
   const { halls, hallAvailabilities, trainings } = useApp()
 

@@ -26,8 +26,9 @@ import CampActivityTemplatesModal from './components/modals/CampActivityTemplate
 import { minutesToTime, SLOT_MINUTES } from './utils/timeUtils.js'
 import { isWithinAvailability } from './utils/calendarUtils.js'
 
+// Hlavní komponenta aplikace s DnD kontextem, modály a stavem UI
 function AppInner() {
-  const { teams, halls, hallAvailabilities, trainings, camps, campActivities, addTraining, moveTraining, updateCampActivity, isLoading } = useApp()
+  const { teams, halls, hallAvailabilities, trainings, camps, campActivities, addTraining, moveTraining, updateCampActivity, isLoading, undo, redo } = useApp()
 
   const [activeItem, setActiveItem]               = useState(null)
   const [trainingModal, setTrainingModal]         = useState(null)
@@ -51,6 +52,7 @@ function AppInner() {
   const activeCamp = camps?.find((c) => c.id === currentCampId)
   const campTeams  = activeCamp ? teams.filter((t) => activeCamp.teamIds?.includes(t.id)) : []
 
+  // Přepne pohled (schedule / camp) a nastaví výchozí tábor pokud žádný není vybraný
   function switchToView(mode) {
     setViewMode(mode)
     if (mode === 'camp' && !currentCampId && camps?.length > 0) {
@@ -58,6 +60,7 @@ function AppInner() {
     }
   }
 
+  // Přepne viditelnost týmu v kalendáři (zobrazit / skrýt)
   function toggleTeamVisibility(teamId) {
     setHiddenTeamIds((prev) =>
       prev.includes(teamId) ? prev.filter((id) => id !== teamId) : [...prev, teamId]
@@ -69,8 +72,23 @@ function AppInner() {
     localStorage.setItem('theme', theme)
   }, [theme])
 
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault(); undo()
+      } else if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+        e.preventDefault(); redo()
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [undo, redo])
+
+  // Přepne mezi světlým a tmavým režimem
   function toggleTheme() { setTheme((t) => (t === 'light' ? 'dark' : 'light')) }
 
+  // Zobrazí dočasnou toast notifikaci na 3 sekundy
   function showToast(msg) {
     setToast(msg)
     setTimeout(() => setToast(null), 3000)
@@ -80,10 +98,12 @@ function AppInner() {
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
   )
 
+  // Uloží data táhnutého prvku do state (pro DragOverlay)
   function handleDragStart({ active }) {
     setActiveItem(active.data.current)
   }
 
+  // Zpracuje upuštění prvku: vytvoří nebo přesune trénink / aktivitu soustředění
   function handleDragEnd({ active, over }) {
     setActiveItem(null)
     if (!canEdit || !over) return
@@ -337,6 +357,7 @@ function AppInner() {
   )
 }
 
+// Zobrazí přihlašovací stránku nebo aplikaci podle stavu autentizace
 function AuthGate() {
   const { user, loading } = useAuth()
 
@@ -355,6 +376,7 @@ function AuthGate() {
   )
 }
 
+// Kořenová komponenta obalující AuthProvider
 export default function App() {
   return (
     <AuthProvider>

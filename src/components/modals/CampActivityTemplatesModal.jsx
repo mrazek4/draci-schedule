@@ -2,16 +2,19 @@ import { useState } from 'react'
 import { useApp } from '../../context/AppContext.jsx'
 import './Modal.css'
 
+// Řádek šablony s inline editací názvu a barvy; ukládá po opuštění pole nebo Enteru
 function TemplateRow({ template, onUpdate, onDelete }) {
   const [label, setLabel] = useState(template.label)
   const [color, setColor] = useState(template.color ?? '#888888')
   const [dirty, setDirty] = useState(false)
 
+  // Aktualizuje pole šablony v lokálním stavu a označí formulář jako změněný
   function handleChange(field, value) {
     if (field === 'label') { setLabel(value); setDirty(true) }
     if (field === 'color') { setColor(value); setDirty(true) }
   }
 
+  // Uloží změny šablony a označí formulář jako čistý
   function handleSave() {
     if (!label.trim()) return
     onUpdate(template.id, { label: label.trim(), color })
@@ -40,11 +43,13 @@ function TemplateRow({ template, onUpdate, onDelete }) {
   )
 }
 
+// Modal pro správu šablon aktivit soustředění (přidání, inline editace, smazání)
 export default function CampActivityTemplatesModal({ onClose }) {
   const { campActivityTemplates, addCampActivityTemplate, updateCampActivityTemplate, deleteCampActivityTemplate } = useApp()
   const [newLabel, setNewLabel] = useState('')
   const [newColor, setNewColor] = useState('#4f6ef7')
 
+  // Přidá novou šablonu aktivity a resetuje formulář
   function handleAdd(e) {
     e.preventDefault()
     if (!newLabel.trim()) return

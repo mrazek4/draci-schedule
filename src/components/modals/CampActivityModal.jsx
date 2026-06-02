@@ -3,6 +3,7 @@ import { useApp } from '../../context/AppContext.jsx'
 import { minutesToTime, timeToMinutes } from '../../utils/timeUtils.js'
 import './Modal.css'
 
+// Modal pro vytvoření nebo editaci aktivity soustředění (šablona, tým, čas, poznámka)
 export default function CampActivityModal({ activity, campId, dateStr, prefill, campTeams, onClose }) {
   const { addCampActivity, updateCampActivity, deleteCampActivity, campActivityTemplates } = useApp()
   const isEdit = !!activity
@@ -35,6 +36,7 @@ export default function CampActivityModal({ activity, campId, dateStr, prefill, 
   const [note,       setNote]       = useState(activity?.note ?? '')
   const [forAllTeams, setForAllTeams] = useState(false)
 
+  // Přepne vybranou šablonu; odvozuje barvu aktivity ze šablony
   function selectTemplate(tpl) {
     if (selectedTemplate?.label === tpl.label) {
       setSelectedTemplate(null)
@@ -45,6 +47,7 @@ export default function CampActivityModal({ activity, campId, dateStr, prefill, 
     }
   }
 
+  // Sestaví popisek aktivity ze šablony + upřesnění nebo z přímého textového vstupu
   function buildLabel() {
     if (effectiveTemplateLabel) {
       return sublabel.trim() ? `${effectiveTemplateLabel}-${sublabel.trim()}` : effectiveTemplateLabel
@@ -52,6 +55,7 @@ export default function CampActivityModal({ activity, campId, dateStr, prefill, 
     return label.trim()
   }
 
+  // Uloží nebo vytvoří aktivitu (pro jeden tým nebo pro všechny týmy soustředění)
   function handleSubmit(e) {
     e.preventDefault()
     const start    = timeToMinutes(startTime)
@@ -72,6 +76,7 @@ export default function CampActivityModal({ activity, campId, dateStr, prefill, 
     onClose()
   }
 
+  // Smaže aktivitu po potvrzení a zavře modal
   function handleDelete() {
     if (!window.confirm('Smazat aktivitu?')) return
     deleteCampActivity(campId, dateStr, activity.id)

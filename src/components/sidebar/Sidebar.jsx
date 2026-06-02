@@ -12,8 +12,9 @@ import { parseExcelTrainings } from '../../utils/importUtils.js'
 import logo from '../../assets/1629729771_club_logo.webp'
 import './Sidebar.css'
 
+// Hlavní postranní panel s navigací, správou sezón, týmů, hal a importem/exportem
 export default function Sidebar({ onManageTeams, onManageHalls, onManageUsers, onAddTraining, theme, onToggleTheme, hiddenTeamIds, onToggleTeam, onShowAll, onHideAll, viewMode, onSwitchView, currentCampId, onSelectCamp, onAddCamp, onEditCamp, listMode, onListModeChange, onManageCampTemplates, campPerspective, onCampPerspectiveChange }) {
-  const { teams, halls, trainings, seasons, currentSeasonId, setCurrentSeason, addSeason, deleteSeason, importTrainings, addHall, camps, deleteCamp, campActivityTemplates } = useApp()
+  const { teams, halls, trainings, seasons, currentSeasonId, setCurrentSeason, addSeason, deleteSeason, importTrainings, addHall, camps, deleteCamp, campActivityTemplates, undo, redo, canUndo, canRedo } = useApp()
   const { user, logout } = useAuth()
   const canEdit = useCanEdit()
   const role    = useRole()
@@ -21,6 +22,7 @@ export default function Sidebar({ onManageTeams, onManageHalls, onManageUsers, o
   const [hallMapping, setHallMapping] = useState(null)
   const [showSeasonModal, setShowSeasonModal] = useState(false)
 
+  // Smaže aktuální sezónu po potvrzení; nelze smazat poslední sezónu
   function handleDeleteSeason() {
     if ((seasons?.length ?? 0) <= 1) { alert('Nelze smazat poslední sezónu.'); return }
     const season = seasons?.find((s) => s.id === currentSeasonId)
@@ -29,6 +31,7 @@ export default function Sidebar({ onManageTeams, onManageHalls, onManageUsers, o
     }
   }
 
+  // Potvrdí import tréninků a nahradí tréninky v aktuální sezóně
   function confirmAndImport(parsedTrainings, skipped) {
     const season = seasons?.find((s) => s.id === currentSeasonId)
     const skipNote = skipped > 0 ? ` (přeskočeno: ${skipped})` : ''
@@ -38,6 +41,7 @@ export default function Sidebar({ onManageTeams, onManageHalls, onManageUsers, o
     setHallMapping(null)
   }
 
+  // Aplikuje namapování neznámých hal (přeskočit / existující / nová) a spustí import
   function handleApplyMapping() {
     const extra = []
     for (const [name, rows] of Object.entries(hallMapping.unknownHalls)) {
@@ -56,6 +60,7 @@ export default function Sidebar({ onManageTeams, onManageHalls, onManageUsers, o
     confirmAndImport([...hallMapping.parsedTrainings, ...extra], hallMapping.skipped)
   }
 
+  // Zpracuje nahrání Excel souboru, spustí parsování a zobrazí dialog pro neznámé haly
   async function handleImport(e) {
     const file = e.target.files[0]
     if (!file) return
@@ -227,6 +232,12 @@ export default function Sidebar({ onManageTeams, onManageHalls, onManageUsers, o
         )}
 
         <div className="sidebar__actions">
+          {canEdit && (
+            <div style={{ display: 'flex', gap: 4 }}>
+              <button className="sidebar__btn" style={{ flex: 1 }} onClick={undo} disabled={!canUndo} title="Vrátit zpět (Ctrl+Z)">↩ Zpět</button>
+              <button className="sidebar__btn" style={{ flex: 1 }} onClick={redo} disabled={!canRedo} title="Zopakovat (Ctrl+Y)">↪ Znovu</button>
+            </div>
+          )}
           {canEdit && viewMode !== 'camp' && (
             <button className="sidebar__btn sidebar__btn--accent" onClick={onAddTraining}>
               + Přidat trénink

@@ -1,5 +1,6 @@
 import { useDroppable } from '@dnd-kit/core'
 
+// Drop target pro DnD; vizuálně indikuje dostupnost a hover stav slotu
 export default function TimeSlot({ dayOfWeek, hallId, teamId, startMinute, available, style, children, onClick }) {
   const id = teamId ? `slot-${dayOfWeek}-t${teamId}-${startMinute}` : `slot-${dayOfWeek}-${hallId}-${startMinute}`
   const { setNodeRef, isOver } = useDroppable({

@@ -11,6 +11,7 @@ const HDR_H     = 32
 const DAY_START = 360   // 6:00
 const DAY_END   = 1380  // 23:00
 
+// CSS grid s řádky pro každý tým a sloupci (čas); zobrazuje aktivity soustředění
 export default function CampGrid({ campTeams, activities, onSlotClick, onActivityClick }) {
   if (!campTeams.length) {
     return <div className="camp-empty">Soustředění nemá přiřazené týmy. Uprav ho v sidebaru.</div>

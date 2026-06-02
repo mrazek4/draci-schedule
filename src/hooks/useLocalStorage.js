@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 
+// Hook: čte a ukládá hodnotu do localStorage; synchronizuje se s React state
 export function useLocalStorage(key, initialValue) {
   const [value, setValue] = useState(() => {
     try {

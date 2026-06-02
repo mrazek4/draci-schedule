@@ -1,6 +1,7 @@
 import CalendarGrid from './CalendarGrid.jsx'
 import TeamCalendarGrid from './TeamCalendarGrid.jsx'
 
+// Zobrazí hlavičku rozvrhu a přepíná mezi pohledem hal (CalendarGrid) a týmů (TeamCalendarGrid)
 export default function CalendarView({ onTrainingClick, onSlotClick, hiddenTeamIds, perspective }) {
   return (
     <div className="calendar-wrap">

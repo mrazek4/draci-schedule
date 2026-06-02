@@ -4,6 +4,7 @@ import { hasConflict } from '../../utils/calendarUtils.js'
 import { useApp } from '../../context/AppContext.jsx'
 import { useCanEdit } from '../../auth/useRole.js'
 
+// Přetahovatelný blok tréninku; zobrazuje zkratky týmů, čas a indikátor konfliktu
 export default function TrainingBlock({ training, onClick }) {
   const { teams, trainings } = useApp()
   const canEdit = useCanEdit()

@@ -3,6 +3,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { minutesToTime } from '../../utils/timeUtils.js'
 import { useCanEdit } from '../../auth/useRole.js'
 
+// Přetahovatelný blok aktivity soustředění; klikem otevírá editor
 export default function CampActivityBlock({ activity, teamColor, onClick }) {
   const canEdit = useCanEdit()
   const bg = activity.color || teamColor || '#4f6ef7'

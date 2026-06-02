@@ -3,6 +3,7 @@ import { useApp } from '../../context/AppContext.jsx'
 import { useAuth } from '../../auth/AuthProvider.jsx'
 import './Modal.css'
 
+// Modal pro správu rolí uživatelů (přidání, změna role, odebrání)
 export default function UserModal({ onClose }) {
   const { userRoles, setUserRole, removeUserRole } = useApp()
   const { user } = useAuth()
@@ -11,6 +12,7 @@ export default function UserModal({ onClose }) {
 
   const entries = Object.entries(userRoles ?? {})
 
+  // Přidá nového uživatele s vybranou rolí a resetuje formulář
   function handleAdd(e) {
     e.preventDefault()
     const email = newEmail.trim().toLowerCase()

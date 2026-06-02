@@ -3,6 +3,7 @@ import { getStoredAuth, handleCallback, startLogin, logout } from './authUtils.j
 
 const AuthContext = createContext(null)
 
+// Provider: spravuje stav přihlášení a zpracovává OAuth2 callback po návratu z Microsoftu
 export function AuthProvider({ children }) {
   const [auth,    setAuth]    = useState(null)
   const [loading, setLoading] = useState(true)
@@ -33,6 +34,7 @@ export function AuthProvider({ children }) {
   )
 }
 
+// Hook pro přístup k autentizačnímu kontextu; vyhodí chybu pokud je použit mimo AuthProvider
 export function useAuth() {
   const ctx = useContext(AuthContext)
   if (!ctx) throw new Error('useAuth must be used inside AuthProvider')

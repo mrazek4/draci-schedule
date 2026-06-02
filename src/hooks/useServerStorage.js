@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 
+// Hook: synchronizuje state se serverem (/api/state), s fallbackem do localStorage
 export function useServerStorage(key, initialValue) {
   const [value, setValue] = useState(initialValue)
   const [isLoading, setIsLoading] = useState(true)

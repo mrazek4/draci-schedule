@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import './Modal.css'
 
+// Modal pro vytvoření nové sezóny s volbou kopírování dostupností hal a týmů
 export default function SeasonModal({ onClose, onAdd }) {
   const [name, setName]                         = useState('')
   const [copyAvailabilities, setCopyAvail]      = useState(true)
   const [copyTeams, setCopyTeams]               = useState(true)
 
+  // Odešle formulář a volá onAdd s názvem a nastavením kopírování
   function handleSubmit(e) {
     e.preventDefault()
     const trimmed = name.trim()

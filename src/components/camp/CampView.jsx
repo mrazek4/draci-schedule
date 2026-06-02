@@ -7,11 +7,13 @@ import './Camp.css'
 const DAY_NAMES  = ['Neděle', 'Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota']
 const MONTH_NAMES = ['ledna', 'února', 'března', 'dubna', 'května', 'června', 'července', 'srpna', 'září', 'října', 'listopadu', 'prosince']
 
+// Formátuje datum z ISO řetězce na čitelný český formát (např. "Pondělí 5. května 2025")
 function formatDate(dateStr) {
   const d = new Date(dateStr + 'T00:00:00')
   return `${DAY_NAMES[d.getDay()]} ${d.getDate()}. ${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}`
 }
 
+// Posune datum o n dnů a vrátí nový ISO řetězec (YYYY-MM-DD)
 function shiftDate(dateStr, n) {
   const d = new Date(dateStr + 'T00:00:00')
   d.setDate(d.getDate() + n)
@@ -21,6 +23,7 @@ function shiftDate(dateStr, n) {
   return `${y}-${mo}-${da}`
 }
 
+// Zobrazuje program soustředění pro jeden den s navigací mezi dny a tlačítkem exportu
 export default function CampView({ campId, date, onDateChange, onSlotClick, onActivityClick, onBack, perspective }) {
   const { camps, campActivities, teams } = useApp()
 
@@ -39,6 +42,7 @@ export default function CampView({ campId, date, onDateChange, onSlotClick, onAc
   const dayActivities = (campActivities?.[campId]?.[currentDate] ?? [])
   const campTeams     = teams.filter((t) => camp.teamIds?.includes(t.id))
 
+  // Exportuje program aktuálního dne do Excel souboru
   async function handleExport() {
     try {
       await exportCampDay(currentDate, campTeams, dayActivities)

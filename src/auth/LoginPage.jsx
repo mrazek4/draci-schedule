@@ -2,6 +2,7 @@ import logo from '../assets/1629729771_club_logo.webp'
 import { useAuth } from './AuthProvider.jsx'
 import './login.css'
 
+// Přihlašovací stránka s logem klubu a tlačítkem pro Microsoft OAuth login
 export default function LoginPage() {
   const { login, error } = useAuth()
 

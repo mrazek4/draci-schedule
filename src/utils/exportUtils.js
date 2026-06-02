@@ -3,18 +3,21 @@ import ExcelJS from 'exceljs'
 const DAY_NAMES      = ['PO', 'ÚT', 'ST', 'ČT', 'PÁ', 'SO', 'NE']
 const DAY_NAMES_FULL = ['Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota', 'Neděle']
 
+// Převede minuty od půlnoci na čas ve formátu HH:MM
 function minutesToTimeStr(minutes) {
   const h = Math.floor(minutes / 60)
   const m = minutes % 60
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
 }
 
+// Formátuje délku tréninku jako H:MM (pro zobrazení v Excelu)
 function formatDuration(minutes) {
   const h = Math.floor(minutes / 60)
   const m = minutes % 60
   return `${h}:${String(m).padStart(2, '0')}`
 }
 
+// Exportuje seznam tréninků do formátovaného Excel souboru .xlsx a spustí stažení
 export async function exportToExcel(trainings, teams, halls) {
   if (!trainings || trainings.length === 0) {
     alert('Žádné tréninky k exportu.')
@@ -93,6 +96,7 @@ export async function exportToExcel(trainings, teams, halls) {
   URL.revokeObjectURL(url)
 }
 
+// Exportuje rozvrh jednoho dne do Excelu (3 sloupce na tým: OD, DO, AKTIVITA)
 export async function exportDailySchedule(dayOfWeek, teams, trainings, halls) {
   const dayName = DAY_NAMES_FULL[dayOfWeek]
 
@@ -195,6 +199,7 @@ export async function exportDailySchedule(dayOfWeek, teams, trainings, halls) {
   URL.revokeObjectURL(url)
 }
 
+// Exportuje program jednoho dne soustředění do Excelu (3 sloupce na tým)
 export async function exportCampDay(date, campTeams, dayActivities) {
   const teamSlots = campTeams
     .map((team) => ({

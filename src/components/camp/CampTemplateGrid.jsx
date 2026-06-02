@@ -12,11 +12,12 @@ const HDR_H     = 32
 const DAY_START = 360
 const DAY_END   = 1380
 
+// Zkontroluje, zda popisek aktivity odpovídá šabloně (přesná shoda nebo prefix "šablona-upřesnění")
 function matches(actLabel, tplLabel) {
   return actLabel === tplLabel || actLabel.startsWith(tplLabel + '-')
 }
 
-// Phase 1 — merge activities with exactly the same time into one "effective block"
+// Sloučí aktivity se stejným časovým rozsahem do jednoho efektivního bloku
 function mergeByExactTime(activities) {
   const map = new Map()
   for (const a of activities) {
@@ -32,7 +33,7 @@ function mergeByExactTime(activities) {
   }))
 }
 
-// Phase 2 — group overlapping effective blocks into clusters
+// Seskupí bloky do shluků překrývajících se časů
 function overlapClusters(blocks) {
   if (!blocks.length) return []
   const sorted = [...blocks].sort((a, b) => a.startMinute - b.startMinute)
@@ -55,7 +56,7 @@ function overlapClusters(blocks) {
   return groups
 }
 
-// Phase 3 — assign vertical lanes within a cluster
+// Přiřadí každému bloku vertikální lane v rámci shluku (bez vzájemného překrytí)
 function assignLanes(cluster) {
   const laneEnds = []
   const assigned = cluster.map((b) => {
@@ -68,7 +69,7 @@ function assignLanes(cluster) {
   return assigned.map((item) => ({ ...item, totalLanes }))
 }
 
-// Renders one effective block (1 or N teams at same time) like a TrainingBlock
+// Vykreslí jeden sloučený blok aktivit (1 nebo více týmů ve stejném čase)
 function MergedBlock({ block, campTeams, onClick, posStyle }) {
   const [pickerOpen, setPickerOpen] = useState(false)
 
@@ -88,6 +89,7 @@ function MergedBlock({ block, campTeams, onClick, posStyle }) {
   const label = teams.slice(0, 2).map((t) => t.shortName).join('+') +
                 (extra > 0 ? `+${extra}` : '')
 
+  // Otevře picker aktivit pro výběr týmu pokud jde o více týmů, jinak rovnou volá onClick
   function handleClick(e) {
     e.stopPropagation()
     if (isMulti) {
@@ -147,6 +149,7 @@ function MergedBlock({ block, campTeams, onClick, posStyle }) {
   )
 }
 
+// CSS grid se šablonami aktivit jako řádky; zobrazuje bloky se sloučením a lane layoutem
 export default function CampTemplateGrid({ campTeams, activities, onSlotClick, onActivityClick }) {
   const { campActivityTemplates } = useApp()
   const templates = campActivityTemplates ?? []

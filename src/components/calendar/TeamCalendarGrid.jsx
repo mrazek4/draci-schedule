@@ -13,6 +13,7 @@ const HDR_H    = 32
 const DAY_NAMES = ['Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek']
 const DAY_SHORT = ['PO', 'ÚT', 'ST', 'ČT', 'PÁ', 'SO', 'NE']
 
+// Blok tréninku v pohledu "týmy": zobrazuje kód haly místo zkratky týmu
 function HallBlock({ training, hall, onClick }) {
   const bg = hall?.color ?? '#555'
   return (
@@ -29,6 +30,7 @@ function HallBlock({ training, hall, onClick }) {
   )
 }
 
+// Horizontální CSS grid s řádky (den × tým) a sloupci (čas); pohled rozvrhu per tým
 export default function TeamCalendarGrid({ onTrainingClick, onSlotClick }) {
   const { teams, halls, hallAvailabilities, trainings } = useApp()
 

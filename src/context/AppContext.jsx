@@ -1,12 +1,57 @@
-import { createContext, useContext, useCallback, useEffect } from 'react'
+import { createContext, useContext, useCallback, useEffect, useRef, useState } from 'react'
 import { useServerStorage } from '../hooks/useServerStorage.js'
 import { defaultState, defaultHallAvailabilities } from '../data/defaults.js'
 
 const AppContext = createContext(null)
 
+const getSnapshot = (s) => ({
+  trainingsBySeason: s.trainingsBySeason,
+  campActivities: s.campActivities,
+  teamsBySeason: s.teamsBySeason,
+  availabilitiesBySeason: s.availabilitiesBySeason,
+  halls: s.halls,
+})
+
+// Provider: spravuje veškerý stav aplikace a zpřístupňuje ho přes context
 export function AppProvider({ children }) {
   const [state, setState, isLoading] = useServerStorage('draci-schedule-v7', defaultState)
 
+  const stateRef   = useRef(state)
+  const historyRef = useRef([])
+  const redoRef    = useRef([])
+  const [canUndo, setCanUndo] = useState(false)
+  const [canRedo, setCanRedo] = useState(false)
+
+  useEffect(() => { stateRef.current = state }, [state])
+
+  const pushHistory = useCallback(() => {
+    historyRef.current = [...historyRef.current.slice(-29), getSnapshot(stateRef.current)]
+    redoRef.current = []
+    setCanUndo(true)
+    setCanRedo(false)
+  }, [])
+
+  const undo = useCallback(() => {
+    if (!historyRef.current.length) return
+    const prev = historyRef.current[historyRef.current.length - 1]
+    redoRef.current = [...redoRef.current, getSnapshot(stateRef.current)]
+    historyRef.current = historyRef.current.slice(0, -1)
+    setState(s => ({ ...s, ...prev }))
+    setCanUndo(historyRef.current.length > 0)
+    setCanRedo(true)
+  }, [setState])
+
+  const redo = useCallback(() => {
+    if (!redoRef.current.length) return
+    const next = redoRef.current[redoRef.current.length - 1]
+    historyRef.current = [...historyRef.current, getSnapshot(stateRef.current)]
+    redoRef.current = redoRef.current.slice(0, -1)
+    setState(s => ({ ...s, ...next }))
+    setCanUndo(true)
+    setCanRedo(redoRef.current.length > 0)
+  }, [setState])
+
+  // Aplikuje částečný patch na state (spread merge)
   const update = useCallback((patch) => setState((s) => ({ ...s, ...patch })), [setState])
 
   useEffect(() => {
@@ -89,7 +134,9 @@ export function AppProvider({ children }) {
   const teams              = state.teamsBySeason?.[state.currentSeasonId] ?? state.teams ?? []
 
   // --- Trainings ---
+  // Přidá nový trénink do aktuální sezóny
   const addTraining = useCallback((training) => {
+    pushHistory()
     setState((s) => {
       const cur = s.trainingsBySeason?.[s.currentSeasonId] ?? []
       return {
@@ -102,7 +149,9 @@ export function AppProvider({ children }) {
     })
   }, [setState])
 
+  // Přesune trénink na jiný den, halu nebo čas; zachová původní délku
   const moveTraining = useCallback((trainingId, dayOfWeek, hallId, startMinute) => {
+    pushHistory()
     setState((s) => {
       const cur = s.trainingsBySeason?.[s.currentSeasonId] ?? []
       return {
@@ -119,7 +168,9 @@ export function AppProvider({ children }) {
     })
   }, [setState])
 
+  // Aktualizuje vybrané vlastnosti tréninku
   const updateTraining = useCallback((trainingId, patch) => {
+    pushHistory()
     setState((s) => {
       const cur = s.trainingsBySeason?.[s.currentSeasonId] ?? []
       return {
@@ -132,7 +183,9 @@ export function AppProvider({ children }) {
     })
   }, [setState])
 
+  // Odstraní trénink podle ID
   const deleteTraining = useCallback((trainingId) => {
+    pushHistory()
     setState((s) => {
       const cur = s.trainingsBySeason?.[s.currentSeasonId] ?? []
       return {
@@ -146,10 +199,12 @@ export function AppProvider({ children }) {
   }, [setState])
 
   // --- Halls ---
+  // Přidá novou halu
   const addHall = useCallback((hall) => {
     setState((s) => ({ ...s, halls: [...s.halls, { id: crypto.randomUUID(), ...hall }] }))
   }, [setState])
 
+  // Aktualizuje vlastnosti haly
   const updateHall = useCallback((hallId, patch) => {
     setState((s) => ({
       ...s,
@@ -157,6 +212,7 @@ export function AppProvider({ children }) {
     }))
   }, [setState])
 
+  // Odstraní halu včetně jejích tréninků a dostupností ve všech sezónách
   const deleteHall = useCallback((hallId) => {
     setState((s) => {
       const filterTs = (ts) => ts.filter((t) => t.hallId !== hallId)
@@ -175,7 +231,9 @@ export function AppProvider({ children }) {
   }, [setState])
 
   // --- Hall availabilities (scoped to current season) ---
+  // Nastaví dostupnosti haly pro aktuální sezónu (přepíše stávající)
   const setHallAvailabilities = useCallback((hallId, availabilities) => {
+    pushHistory()
     setState((s) => {
       const cur = s.availabilitiesBySeason?.[s.currentSeasonId] ?? []
       return {
@@ -192,21 +250,27 @@ export function AppProvider({ children }) {
   }, [setState])
 
   // --- Teams (per-season) ---
+  // Přidá nový tým do aktuální sezóny
   const addTeam = useCallback((team) => {
+    pushHistory()
     setState((s) => {
       const cur = s.teamsBySeason?.[s.currentSeasonId] ?? []
       return { ...s, teamsBySeason: { ...(s.teamsBySeason ?? {}), [s.currentSeasonId]: [...cur, { ...team, id: crypto.randomUUID() }] } }
     })
   }, [setState])
 
+  // Aktualizuje vlastnosti týmu v aktuální sezóně
   const updateTeam = useCallback((teamId, patch) => {
+    pushHistory()
     setState((s) => {
       const cur = s.teamsBySeason?.[s.currentSeasonId] ?? []
       return { ...s, teamsBySeason: { ...(s.teamsBySeason ?? {}), [s.currentSeasonId]: cur.map((t) => (t.id === teamId ? { ...t, ...patch } : t)) } }
     })
   }, [setState])
 
+  // Odstraní tým a jeho tréninky z aktuální sezóny
   const deleteTeam = useCallback((teamId) => {
+    pushHistory()
     setState((s) => {
       const cur   = s.teamsBySeason?.[s.currentSeasonId] ?? []
       const curTs = s.trainingsBySeason?.[s.currentSeasonId] ?? []
@@ -220,6 +284,7 @@ export function AppProvider({ children }) {
   }, [setState])
 
   // --- Seasons ---
+  // Vytvoří novou sezónu; volitelně zkopíruje dostupnosti hal a týmy z aktuální sezóny
   const addSeason = useCallback((name, { copyAvailabilities = true, copyTeams = true } = {}) => {
     const id = crypto.randomUUID().slice(0, 8)
     setState((s) => {
@@ -236,6 +301,7 @@ export function AppProvider({ children }) {
     })
   }, [setState])
 
+  // Odstraní sezónu a přepne na první zbývající
   const deleteSeason = useCallback((seasonId) => {
     setState((s) => {
       const seasons = (s.seasons ?? []).filter((se) => se.id !== seasonId)
@@ -247,10 +313,12 @@ export function AppProvider({ children }) {
     })
   }, [setState])
 
+  // Přepne aktivní sezónu
   const setCurrentSeason = useCallback((id) => {
     setState((s) => ({ ...s, currentSeasonId: id }))
   }, [setState])
 
+  // Nahradí tréninky v dané sezóně novým polem
   const setTrainingsForSeason = useCallback((seasonId, newTrainings) => {
     setState((s) => ({
       ...s,
@@ -258,7 +326,7 @@ export function AppProvider({ children }) {
     }))
   }, [setState])
 
-  // Import: replaces trainings AND sets availability for that season from the data
+  // Importuje tréninky a automaticky odvodí dostupnosti hal z časových rozsahů tréninků
   const importTrainings = useCallback((seasonId, newTrainings) => {
     setState((s) => {
       const byHall = {}
@@ -286,10 +354,12 @@ export function AppProvider({ children }) {
   }, [setState])
 
   // --- User roles ---
+  // Nastaví roli uživatele (admin / vybor)
   const setUserRole = useCallback((email, role) => {
     setState((s) => ({ ...s, userRoles: { ...(s.userRoles ?? {}), [email]: role } }))
   }, [setState])
 
+  // Odebere roli uživatele
   const removeUserRole = useCallback((email) => {
     setState((s) => {
       const { [email]: _, ...rest } = s.userRoles ?? {}
@@ -298,6 +368,7 @@ export function AppProvider({ children }) {
   }, [setState])
 
   // --- Camps ---
+  // Přidá nové soustředění
   const addCamp = useCallback((camp) => {
     setState((s) => ({
       ...s,
@@ -305,6 +376,7 @@ export function AppProvider({ children }) {
     }))
   }, [setState])
 
+  // Aktualizuje vlastnosti soustředění
   const updateCamp = useCallback((id, patch) => {
     setState((s) => ({
       ...s,
@@ -312,6 +384,7 @@ export function AppProvider({ children }) {
     }))
   }, [setState])
 
+  // Odstraní soustředění včetně všech jeho aktivit
   const deleteCamp = useCallback((id) => {
     setState((s) => {
       const { [id]: _deleted, ...restActivities } = s.campActivities ?? {}
@@ -323,7 +396,9 @@ export function AppProvider({ children }) {
     })
   }, [setState])
 
+  // Přidá aktivitu do programu daného dne soustředění
   const addCampActivity = useCallback((campId, dateStr, activity) => {
+    pushHistory()
     setState((s) => {
       const all  = s.campActivities ?? {}
       const days = all[campId] ?? {}
@@ -335,7 +410,9 @@ export function AppProvider({ children }) {
     })
   }, [setState])
 
+  // Aktualizuje aktivitu v programu soustředění
   const updateCampActivity = useCallback((campId, dateStr, activityId, patch) => {
+    pushHistory()
     setState((s) => {
       const all  = s.campActivities ?? {}
       const days = all[campId] ?? {}
@@ -347,7 +424,9 @@ export function AppProvider({ children }) {
     })
   }, [setState])
 
+  // Odstraní aktivitu z programu soustředění
   const deleteCampActivity = useCallback((campId, dateStr, activityId) => {
+    pushHistory()
     setState((s) => {
       const all  = s.campActivities ?? {}
       const days = all[campId] ?? {}
@@ -360,6 +439,7 @@ export function AppProvider({ children }) {
   }, [setState])
 
   // --- Camp activity templates ---
+  // Přidá novou šablonu aktivity soustředění
   const addCampActivityTemplate = useCallback((tpl) => {
     setState((s) => ({
       ...s,
@@ -367,6 +447,7 @@ export function AppProvider({ children }) {
     }))
   }, [setState])
 
+  // Aktualizuje šablonu aktivity soustředění
   const updateCampActivityTemplate = useCallback((id, patch) => {
     setState((s) => ({
       ...s,
@@ -374,6 +455,7 @@ export function AppProvider({ children }) {
     }))
   }, [setState])
 
+  // Odstraní šablonu aktivity soustředění
   const deleteCampActivityTemplate = useCallback((id) => {
     setState((s) => ({
       ...s,
@@ -382,6 +464,7 @@ export function AppProvider({ children }) {
   }, [setState])
 
   // --- Week navigation ---
+  // Nastaví offset týdne v kalendáři (0 = aktuální týden)
   const setWeekOffset = useCallback((offset) => update({ weekOffset: offset }), [update])
 
   const value = {
@@ -390,6 +473,7 @@ export function AppProvider({ children }) {
     hallAvailabilities,
     teams,
     isLoading,
+    undo, redo, canUndo, canRedo,
     addTraining, moveTraining, updateTraining, deleteTraining,
     addHall, updateHall, deleteHall, setHallAvailabilities,
     addTeam, updateTeam, deleteTeam,
@@ -403,6 +487,7 @@ export function AppProvider({ children }) {
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>
 }
 
+// Hook pro přístup k AppContext; vyhodí chybu pokud je použit mimo AppProvider
 export function useApp() {
   const ctx = useContext(AppContext)
   if (!ctx) throw new Error('useApp must be used inside AppProvider')

@@ -4,23 +4,27 @@ const STORAGE_KEY  = 'draci-auth'
 const VERIFIER_KEY = 'pkce_verifier'
 const STATE_KEY    = 'pkce_state'
 
+// Zakóduje pole bajtů do Base64URL formátu (bezpečný pro URL, bez paddingu)
 function base64urlEncode(array) {
   return btoa(String.fromCharCode(...array))
     .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
 }
 
+// Vygeneruje náhodný 32bajtový PKCE code verifier
 function generateVerifier() {
   const buf = new Uint8Array(32)
   crypto.getRandomValues(buf)
   return base64urlEncode(buf)
 }
 
+// Vygeneruje PKCE code challenge jako SHA-256 hash verifieru
 async function generateChallenge(verifier) {
   const data = new TextEncoder().encode(verifier)
   const hash = await crypto.subtle.digest('SHA-256', data)
   return base64urlEncode(new Uint8Array(hash))
 }
 
+// Spustí OAuth2 PKCE přihlašování – přesměruje prohlížeč na Microsoft login
 export async function startLogin() {
   const verifier  = generateVerifier()
   const challenge = await generateChallenge(verifier)
@@ -42,6 +46,7 @@ export async function startLogin() {
   window.location.href = `${AUTHORITY}/oauth2/v2.0/authorize?${params}`
 }
 
+// Zpracuje OAuth2 callback: vymění authorization code za tokeny a uloží přihlášení
 export async function handleCallback() {
   const params = new URLSearchParams(window.location.search)
   const code   = params.get('code')
@@ -94,6 +99,7 @@ export async function handleCallback() {
   return auth
 }
 
+// Načte uložené přihlášení z localStorage; vrátí null pokud chybí nebo token expiroval
 export function getStoredAuth() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
@@ -109,6 +115,7 @@ export function getStoredAuth() {
   }
 }
 
+// Odhlásí uživatele: smaže localStorage a přesměruje na Microsoft logout
 export function logout() {
   localStorage.removeItem(STORAGE_KEY)
   const params = new URLSearchParams({ post_logout_redirect_uri: window.location.origin })
